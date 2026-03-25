@@ -18,10 +18,8 @@ PYBIND11_MODULE(_bindings, m) {
     scdepth::bind_govs(m);
 }
 
-py::array_t<uint32_t> scdepth::make_2d_u32(std::vector<uint32_t> &v,
-                                         size_t dim0,        // e.g. fracs
-                                         size_t dim1,        // e.g. barcodes
-                                         py::handle owner)
+py::array_t<uint32_t> scdepth::make_2d_u32(std::vector<uint32_t> &v, 
+    size_t dim0, size_t dim1, py::handle owner) 
 {
     using ssize = py::ssize_t;
     if (v.size() != dim0 * dim1) {
@@ -39,9 +37,7 @@ py::array_t<uint32_t> scdepth::make_2d_u32(std::vector<uint32_t> &v,
 }
 
 py::array_t<uint64_t> scdepth::make_2d_u64(std::vector<uint64_t> &v,
-                                         size_t dim0,        // e.g. fracs
-                                         size_t dim1,        // e.g. barcodes
-                                         py::handle owner)
+    size_t dim0, size_t dim1, py::handle owner)
 {
     using ssize = py::ssize_t;
     if (v.size() != dim0 * dim1) {
@@ -59,8 +55,9 @@ py::array_t<uint64_t> scdepth::make_2d_u64(std::vector<uint64_t> &v,
 }
 
 py::array scdepth::make_3d_u64(std::vector<uint64_t> &v,
-                            size_t dim0, size_t dim1, size_t dim2,
-                            py::object owner) {
+    size_t dim0, size_t dim1, size_t dim2,
+    py::object owner) 
+{
     return py::array(
         py::buffer_info(
             v.data(),
@@ -77,8 +74,8 @@ py::array scdepth::make_3d_u64(std::vector<uint64_t> &v,
 }
 
 py::array scdepth::make_3d_u32(std::vector<uint32_t> &v,
-                            size_t dim0, size_t dim1, size_t dim2,
-                            py::object owner) {
+    size_t dim0, size_t dim1, size_t dim2, py::object owner)
+{
     return py::array(
         py::buffer_info(
             v.data(),
@@ -95,9 +92,7 @@ py::array scdepth::make_3d_u32(std::vector<uint32_t> &v,
 }
 
 py::object scdepth::sparse_to_csr(SparseMatrix &mat,
-                                size_t n_rows,
-                                size_t n_cols,
-                                py::handle owner)
+    size_t n_rows, size_t n_cols, py::handle owner, bool copy)
 {
     namespace py = pybind11;
     using ssize = py::ssize_t;
@@ -109,27 +104,37 @@ py::object scdepth::sparse_to_csr(SparseMatrix &mat,
         throw std::runtime_error("SparseMatrix data/indices size mismatch");
     }
 
-    // 1D numpy arrays (zero-copy, lifetime tied to owner)
-    py::array_t<uint32_t> data(
-        { nnz },
-        { static_cast<ssize>(sizeof(uint32_t)) },
-        mat.data.data(),
-        owner
-    );
+    py::array_t<uint32_t> data, indices, indptr;
+    if(copy){
+        data = py::array_t<uint32_t>(nnz);
+        indices = py::array_t<uint32_t>(nnz);
+        indptr = py::array_t<uint32_t>(n_indptr);
 
-    py::array_t<uint32_t> indices(
-        { nnz },
-        { static_cast<ssize>(sizeof(uint32_t)) },
-        mat.indices.data(),
-        owner
-    );
+        std::memcpy(data.mutable_data(), mat.data.data(), nnz * sizeof(uint32_t));
+        std::memcpy(indices.mutable_data(), mat.indices.data(), nnz * sizeof(uint32_t));
+        std::memcpy(indptr.mutable_data(), mat.indptr.data(), n_indptr * sizeof(uint32_t));
+    }else{
+        data = py::array_t<uint32_t>(
+            { nnz },
+            { static_cast<ssize>(sizeof(uint32_t)) },
+            mat.data.data(),
+            owner
+        );
 
-    py::array_t<uint32_t> indptr(
-        { n_indptr },
-        { static_cast<ssize>(sizeof(uint32_t)) },
-        mat.indptr.data(),
-        owner
-    );
+        indices = py::array_t<uint32_t>(
+            { nnz },
+            { static_cast<ssize>(sizeof(uint32_t)) },
+            mat.indices.data(),
+            owner
+        );
+
+        indptr = py::array_t<uint32_t>(
+            { n_indptr },
+            { static_cast<ssize>(sizeof(uint32_t)) },
+            mat.indptr.data(),
+            owner
+        );
+    }
 
     auto sparse = py::module_::import("scipy.sparse");
 
@@ -148,7 +153,7 @@ py::object scdepth::sparse_to_csr(SparseMatrix &mat,
 }
 
 py::array_t<uint32_t> scdepth::make_1d_u32(std::vector<uint32_t> &v,
-                                         py::handle owner)
+    py::handle owner)
 {
     using ssize = py::ssize_t;
     return py::array_t<uint32_t>(
@@ -160,7 +165,7 @@ py::array_t<uint32_t> scdepth::make_1d_u32(std::vector<uint32_t> &v,
 }
 
 py::array_t<uint64_t> scdepth::make_1d_u64(std::vector<uint64_t> &v,
-                                         py::handle owner)
+    py::handle owner)
 {
     using ssize = py::ssize_t;
     return py::array_t<uint64_t>(

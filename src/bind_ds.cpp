@@ -674,7 +674,7 @@ void scdepth::bind_downsampler(py::module_ &m) {
                 return sparse_to_csr(res.binned_mat,
                                     res.binned_mat.indptr.size() - 1,
                                     res.genes,
-                                    py::cast(&self));
+                                    py::cast(&self), true);
             },
             py::arg("step"),
             py::arg("bin_div"))

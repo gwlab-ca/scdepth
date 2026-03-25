@@ -11,7 +11,7 @@
 namespace py = pybind11;
 namespace scdepth{
 
-py::object sparse_to_csr(SparseMatrix &mat, size_t n_rows, size_t n_cols, py::handle owner);
+py::object sparse_to_csr(SparseMatrix &mat, size_t n_rows, size_t n_cols, py::handle owner, bool copy = false);
 
 py::array_t<uint32_t> make_1d_u32(std::vector<uint32_t> &v, py::handle owner);
 py::array_t<uint64_t> make_1d_u64(std::vector<uint64_t> &v, py::handle owner);
