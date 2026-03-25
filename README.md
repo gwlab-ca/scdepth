@@ -41,6 +41,10 @@ All commands share a sample prefix, for example, `your_sample/scdepth `.  This p
 
 All of these commands depend on [cache](#cache) which generates a binary encoded and bgzip compressed tag file. For documentation on the tag file format see [here](tag_format.md).
 
+## API
+
+There is a large python API associated with the scdepth downsampling framework documented [here](downsampler.md) with example notebooks in [./notebooks](./notebooks). 
+
 ## Unsupported Library Types:
 
 The [libraries](#libraries) subcommand lists all of the currently supported libraryes.  I have also added beta support for custom libraries using a [json file](custom-libs.md). Please note that this is still in beta and we are working to improve this. The custom library json file needs to be provided to the commands using the `--custom-libs` argument. I am happy to help support adding custom libraries please create an issue if you have any trouble.
@@ -70,11 +74,52 @@ The [libraries](#libraries) subcommand lists all of the currently supported libr
 | [emptydrops](#emptydrops) | Run emptydrops and basic filtering. Running this step or creating a similar file is required for scRNA-seq samples | 
 | [fit](#fit) | Run the baseline fit.  This is required for interactive analyses and the other steps |
 
-## API
 
-There is a large python API associated with the scdepth downsampling framework documented [here](downsampler.md) with example notebooks in [./notebooks](./notebooks). 
+## Run analyses with default parameters:
 
---- 
+```
+#libraries can be viewed with scdepth libraries
+scdepth cache -t <samtools reading threads> -l 10X_3p_v31 -g <gtf path> <bam path> sample/scdepth
+
+#for probe based libraries
+#scdepth probes -p <path to probe file.csv> sample/scdepth
+
+#perform the baseline fit. This is required all of the other analyses
+scdepth fit -s <sample name> -t <processing threads> sample/scdepth
+
+#Files needed for barcode filtering. Only needed for genes/stability commands,
+#  emptydrops is used with limits for pilot analysis if cell numbers are not specified.
+
+#for Visium
+#scdepth barcodes -b <path/tissue_positions.csv> sample/scdepth
+#For Visium HD
+#scdepth barcodes -b <path/tissue_positions.parquet> sample/scdepth
+#for scRNA
+#scdepth emptydrops -t <processing threads> sample/scdepth
+
+
+#perform limited saturation analyses with pilot depths
+#Visium
+#scdepth limit -s <sample name> -t <processing threads> --tissue-frac <slide tissue fraction> --tissue-scale <6.5 or 11> sample/scdepth
+#Visium HD
+#scdepth limit -s <sample name> -t <processing threads> --tissue-frac <slide tissue fraction> sample/scdepth
+#scRNA-seq with scdepth empydrops
+#scdepth limit -s <sample name> -t <processing threads> --use-scrna sample/scdepth
+#scRNA-seq with manual cell count
+#scdepth limit -s <sample name> -t <processing threads> --n-cells <cells> sample/scdepth
+#The limit command can also be run without pilot depths
+#scdepth limit --no-cells -s <sample name> -t <processing threads> sample/scdepth
+
+#Run preseq scdepth limit must be executed first
+scdepth preseq -s <sample name> --preseq <path_to_preseq executable> sample/scdepth
+
+#Run gene stability analyses.  Requires emptydrops/barcodes output
+scdepth genes -s <sample name> -t <processing threads> sample/scdepth
+#Run basic stability analysis for HVGS/KNN/Leiden clustering
+scdepth stability -s <sample name> -t <processing threads> sample/scdepth
+```
+
+---
 
 ## libraries
 
