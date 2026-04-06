@@ -134,7 +134,6 @@ def build_overlaps(args, full_summary):
     for s in seed_files:
         os.remove(s)
 
-    color_jaccard = "#D55E00"
     color_stability = "#0072B2"
 
     fig, axs = pl.figax(1, 4, s=4)
@@ -176,27 +175,27 @@ def build_overlaps(args, full_summary):
             rows[f].append(100.0 * len(g) / len(gdf))
             v = g[f'{s}_{i}'].values
             rows[s].append(np.median(v))
-            pl.plot_violin(ax, pos=i, v=v, color=color_stability, alpha=0.8)
+            pl.plot_violin(ax, pos=i, v=100 * v, color=color_stability, alpha=0.8)
 
     odf = pd.DataFrame(rows)
     odf.to_csv(f'{oprefix}_summary.txt', sep='\t', index=False)
 
     for ax in axs:
-        ax.set_ylim(0, 1)
+        ax.set_ylim(-5, 105)
         ax.set_xticks(np.arange(len(targs)))
         ax.set_xticklabels(targs)
-        ax.tick_params(axis='both', labelsize=14)
+        ax.tick_params(axis='both', labelsize=18)
         ax.tick_params(axis='both', which='both', length=4)
-        ax.set_xlabel(f'{slab.title()} (%)', fontsize=24)
+        ax.set_xlabel(f'{slab.title()} (%)', fontsize=20)
         ax.grid(axis='y', color='lightgray', ls='--', lw=1, which='both')
         ax.set_axisbelow(True)
 
-    axs[0].set_ylabel('Mean Stability\nPer Barcode', fontsize=24, labelpad=15)
+    axs[0].set_ylabel('Mean Stability\nPer Barcode (%)', fontsize=24, labelpad=15)
 
-    axs[0].set_title(f'Global [{kpercs[0]:.2f}% Barcodes]', fontsize=24, pad=15)
-    axs[1].set_title(f'Molecules = 1 [{kpercs[1]:.2f}% Barcodes]', fontsize=24, pad=15)
-    axs[2].set_title(f'Molecules = 2 [{kpercs[2]:.2f}% Barcodes]', fontsize=24, pad=15)
-    axs[3].set_title(f'Molecules = 3+ [{kpercs[3]:.2f}% Barcodes]', fontsize=24, pad=15)
+    axs[0].set_title(f'Global\n({kpercs[0]:.2f}% Barcodes)', fontsize=20, pad=15)
+    axs[1].set_title(f'Molecules = 1\n({kpercs[1]:.2f}% Barcodes)', fontsize=20, pad=15)
+    axs[2].set_title(f'Molecules = 2\n({kpercs[2]:.2f}% Barcodes)', fontsize=20, pad=15)
+    axs[3].set_title(f'Molecules = 3+\n({kpercs[3]:.2f}% Barcodes)', fontsize=20, pad=15)
 
     legend_elements = [
         Line2D([0], [0],
