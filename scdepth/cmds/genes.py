@@ -137,7 +137,7 @@ def build_overlaps(args, full_summary):
     color_jaccard = "#D55E00"
     color_stability = "#0072B2"
 
-    fig, axs = pl.figax(1, 4, w=8, h=4)
+    fig, axs = pl.figax(1, 4, s=4)
     fig.subplots_adjust(hspace=0.4)
     axs = axs.flatten()
     sprefs = ['stability', 'stability_1', 'stability_2', 'stability_3p']
@@ -187,16 +187,16 @@ def build_overlaps(args, full_summary):
         ax.set_xticklabels(targs)
         ax.tick_params(axis='both', labelsize=14)
         ax.tick_params(axis='both', which='both', length=4)
-        ax.set_xlabel(f'{slab.title()} (%)', fontsize=20)
+        ax.set_xlabel(f'{slab.title()} (%)', fontsize=24)
         ax.grid(axis='y', color='lightgray', ls='--', lw=1, which='both')
         ax.set_axisbelow(True)
 
-    axs[0].set_ylabel('Mean Stability\nPer Barcode', fontsize=20, labelpad=15)
+    axs[0].set_ylabel('Mean Stability\nPer Barcode', fontsize=24, labelpad=15)
 
-    axs[0].set_title(f'Global [{kpercs[0]:.2f}% Barcodes]', fontsize=20, pad=15)
-    axs[1].set_title(f'Molecules = 1 [{kpercs[1]:.2f}% Barcodes]', fontsize=20, pad=15)
-    axs[2].set_title(f'Molecules = 2 [{kpercs[2]:.2f}% Barcodes]', fontsize=20, pad=15)
-    axs[3].set_title(f'Molecules = 3+ [{kpercs[3]:.2f}% Barcodes]', fontsize=20, pad=15)
+    axs[0].set_title(f'Global [{kpercs[0]:.2f}% Barcodes]', fontsize=24, pad=15)
+    axs[1].set_title(f'Molecules = 1 [{kpercs[1]:.2f}% Barcodes]', fontsize=24, pad=15)
+    axs[2].set_title(f'Molecules = 2 [{kpercs[2]:.2f}% Barcodes]', fontsize=24, pad=15)
+    axs[3].set_title(f'Molecules = 3+ [{kpercs[3]:.2f}% Barcodes]', fontsize=24, pad=15)
 
     legend_elements = [
         Line2D([0], [0],

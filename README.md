@@ -547,7 +547,6 @@ scdepth stability [options] <prefix>
 | ----------- | ----------- |
 | `<prefix>_stability_curve_stats.txt` | raw curve stats for the recovery curves |
 | `<prefix>_stability_summary.txt` | Summary statistics of the HVGS/KNN/clustering stability analyses |
-| `<prefix>_stability_summary.svg` | Clustering stability summary plot |
 
 ---
 

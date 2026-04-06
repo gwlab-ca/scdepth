@@ -303,8 +303,6 @@ def run_stability(args, full_summary):
             label_lists[j].append(labels)
             del adata
 
-    fig, ax = pl.figax(1, 1, s=5)
-
     x = []
     y = [[] for _ in resolutions]
     rows = []
@@ -333,23 +331,12 @@ def run_stability(args, full_summary):
             row[f'n_clusters_median_res{res}'] = float(t.labs_median)
         x.append(b)
         rows.append(row)
-    recs = np.array(recoveries)
 
     all_stats  = pd.concat(curves)
     all_stats.insert(loc=0, column='sample', value=args.sample)
     all_stats.to_csv(f'{oprefix}_curve_stats.txt', sep='\t', index=False)
     summary = pd.DataFrame(rows).sort_values(['sample', 'recovery'])
     summary.to_csv(f'{oprefix}_summary.txt', sep='\t', index=False)
-    rnorm = (recs - recs.min()) / np.ptp(recs)
-    for i, r in enumerate(resolutions):
-        ax.plot(x, y[i], label = f'Res = {r:.1f}',zorder=4)
-        ax.scatter(x, y[i], marker='o', s=50, c=rnorm, cmap=plt.cm.coolwarm, zorder=5, edgecolor='k', lw=1)
-
-    lgd = ax.legend(loc = 'upper left', bbox_to_anchor=(1.05, 1))
-    ax.set_xlabel('KNN')
-    ax.set_ylabel('ARI')
-    fig.savefig(f'{oprefix}_summary.svg', bbox_inches='tight', bbox_extra_artists=(lgd,))
-
 
 def main(parser, args):
     args, summary = common.resolve_args(parser, args, resolve_args=resolve_args, 
