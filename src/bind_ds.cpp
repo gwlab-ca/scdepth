@@ -654,6 +654,14 @@ void scdepth::bind_downsampler(py::module_ &m) {
                     throw std::runtime_error("build_mats was false");
                 if (step >= res.steps)
                     throw std::out_of_range("step out of range");
+                py::print(
+                    "Test",
+                    "indptr", res.total_mat[step].indptr.size(),
+                    "indices", res.total_mat[step].indices.size(),
+                    "data", res.total_mat[step].data.size(),
+                    "barcodes", res.barcodes,
+                    "genes", res.genes
+                );
                 return sparse_to_csr(res.total_mat[step],
                                     res.barcodes,
                                     res.genes,

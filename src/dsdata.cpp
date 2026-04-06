@@ -151,12 +151,11 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     }
 
     if(build_mats){
+        total_mat.assign(fracs.size(), SparseMatrix());
         if(calc_sau){
             spliced_mat.assign(fracs.size(), SparseMatrix());
             ambiguous_mat.assign(fracs.size(), SparseMatrix());
             unspliced_mat.assign(fracs.size(), SparseMatrix());
-        }else{
-            total_mat.assign(fracs.size(), SparseMatrix());
         }
     }else{
         total_mat.resize(0);
@@ -213,12 +212,11 @@ void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes
         gcounts.resize(0);
     }
     if(build_mats){
+        total_mat.assign(fracs.size(), SparseMatrix());
         if(calc_sau){
             spliced_mat.assign(fracs.size(), SparseMatrix());
             ambiguous_mat.assign(fracs.size(), SparseMatrix());
             unspliced_mat.assign(fracs.size(), SparseMatrix());
-        }else{
-            total_mat.assign(fracs.size(), SparseMatrix());
         }
     }else{
         total_mat.resize(0);
@@ -266,11 +264,10 @@ void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
             for(size_t i = 0; i < unspliced_mat.size(); i++){
                 unspliced_mat[i].merge(rhs.unspliced_mat[i]);
             }
-        }else{
-            assert(total_mat.size() == rhs.total_mat.size());
-            for(size_t i = 0; i < total_mat.size(); i++){
-                total_mat[i].merge(rhs.total_mat[i]);
-            }
+        }
+        assert(total_mat.size() == rhs.total_mat.size());
+        for(size_t i = 0; i < total_mat.size(); i++){
+            total_mat[i].merge(rhs.total_mat[i]);
         }
     }
     if(!aggregate_only){

@@ -19,12 +19,14 @@ int main(int argc, char * argv[]){
     unsigned int threads = std::stoi(argv[2]);
     unsigned int umi_len = std::stoi(argv[3]);
 
-    ds.init(prefix, "MT-", "", "", "", 50, true, false);
+    ds.init(prefix, "", "", "", "", 50, true, true);
 
     //std::vector<double> fracs = {1.0, 0.75, 0.5, 0.25, 0.1};
     //std::vector<double> fracs = {0.1, 0.25, 0.5, 0.75, 1.0};
-    std::vector<double> fracs = {1.0};
+    std::vector<double> fracs = {0.25, 0.5};
     ds.downsample(fracs, umi_len, 42, threads, true);
+
+
 
     /*
     std::cout << "Gene counts check\n";

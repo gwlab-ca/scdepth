@@ -71,11 +71,10 @@ void DownsamplerThread::operator()(){
                         if(out.spliced_mat[i].indptr.size() != (bc.index - cstart_ + 2)){
                             std::cerr << "[error] indptr size = " << out.spliced_mat[i].indptr.size() << " c = " << i << " cstart = " << cstart_ << " index = " << bc.index << "\n";
                         }
-                    }else{
-                        out.total_mat[i].indptr.push_back(out.total_mat[i].data.size());
-                        if(out.total_mat[i].indptr.size() != (bc.index - cstart_ + 2)){
-                            std::cerr << "[error] indptr size = " << out.total_mat[i].indptr.size() << " c = " << i << " cstart = " << cstart_ << " index = " << bc.index << "\n";
-                        }
+                    }
+                    out.total_mat[i].indptr.push_back(out.total_mat[i].data.size());
+                    if(out.total_mat[i].indptr.size() != (bc.index - cstart_ + 2)){
+                        std::cerr << "[error] indptr size = " << out.total_mat[i].indptr.size() << " c = " << i << " cstart = " << cstart_ << " index = " << bc.index << "\n";
                     }
                 }
             }
@@ -261,10 +260,9 @@ void DownsamplerThread::merge_barcode_(size_t i, const BarcodeCount & bc, const 
                     out.ambiguous_mat[i].indices.push_back(start->gene);
                     out.ambiguous_mat[i].data.push_back(ambiguous_mols);
                 }
-            }else if(total_mols > 0){
-                out.total_mat[i].indices.push_back(start->gene);
-                out.total_mat[i].data.push_back(total_mols);
             }
+            out.total_mat[i].indices.push_back(start->gene);
+            out.total_mat[i].data.push_back(total_mols);
         }
     }
 
@@ -314,8 +312,7 @@ void DownsamplerThread::merge_barcode_(size_t i, const BarcodeCount & bc, const 
             out.spliced_mat[i].indptr.push_back(out.spliced_mat[i].data.size());
             out.unspliced_mat[i].indptr.push_back(out.unspliced_mat[i].data.size());
             out.ambiguous_mat[i].indptr.push_back(out.ambiguous_mat[i].data.size());
-        }else{
-            out.total_mat[i].indptr.push_back(out.total_mat[i].data.size());
         }
+        out.total_mat[i].indptr.push_back(out.total_mat[i].data.size());
     }
 }

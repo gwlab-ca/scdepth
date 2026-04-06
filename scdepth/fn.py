@@ -1,4 +1,4 @@
-#SPDX-License-Identifier: MIT
+#rSPDX-License-Identifier: MIT
 #Copyright (c) Gavin W. Wilson
 
 from scdepth.bindings import Downsampler
