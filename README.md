@@ -41,9 +41,9 @@ All commands share a sample prefix, for example, `your_sample/scdepth `.  This p
 
 All of these commands depend on [cache](#cache) which generates a binary encoded and bgzip compressed tag file. For documentation on the tag file format see [here](tag_format.md).
 
-## API
+## API and Example Data
 
-There is a large python API associated with the scdepth downsampling framework documented [here](downsampler.md) with example notebooks in [./notebooks](./notebooks). 
+There is a large python API associated with the scdepth downsampling framework documented [here](downsampler.md) with an example notebook in [./notebooks](./notebooks). There is an example pre-procsessed sample in [./example/pbmc_1k_protein_v3](./example/pbmc_1k_protein_v3) that the example notebook uses.
 
 ## Unsupported Library Types:
 
