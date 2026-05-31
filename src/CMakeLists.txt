@@ -27,11 +27,11 @@ set(BINDING_SOURCES
     bind_govs.cpp
 )
 
-add_executable(scdepth-bin scdepth.cpp ${SOURCES})
-add_dependencies(scdepth-bin htslib)
-target_link_libraries(scdepth-bin PUBLIC htslib_imp  Threads::Threads ZLIB::ZLIB)
-target_include_directories(scdepth-bin SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
-set_target_properties(scdepth-bin PROPERTIES OUTPUT_NAME scdepth)
+#add_executable(scdepth-bin scdepth.cpp ${SOURCES})
+#add_dependencies(scdepth-bin htslib)
+#target_link_libraries(scdepth-bin PUBLIC htslib_imp  Threads::Threads ZLIB::ZLIB)
+#target_include_directories(scdepth-bin SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
+#set_target_properties(scdepth-bin PROPERTIES OUTPUT_NAME scdepth)
 
 pybind11_add_module(_bindings ${BINDING_SOURCES} ${SOURCES})
 target_link_libraries(_bindings PUBLIC htslib_imp  Threads::Threads ZLIB::ZLIB)
