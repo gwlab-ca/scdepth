@@ -17,7 +17,7 @@ def build_parser(parser) -> argparse.ArgumentParser:
                         help='Library identifier can from scdepth libraries for a list or a custom name')
     g_init.add_argument('--sample-tag', required=False, default="",
                         help='Sample identifier tag for multiplex libraries such as parse')
-    g_init.add_argument('--samples', required=True,
+    g_init.add_argument('--samples', required=False, default="",
                         help='Comma separated list of valid samples')
     #g_init.add_argument('--benchmark', action='store_true',
     #                    help='Calculate timing / memory usage')
