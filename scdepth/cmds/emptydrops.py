@@ -203,7 +203,8 @@ def main(parser, args):
 
     ds = Downsampler()
     ds.init(args.prefix, max_hist=40, build_matrices=True) #, calc_usa=True)
-    ds.downsample([args.frac], umi_len=umi_length, seed=args.seed, threads=args.threads, aggregate_only=False)
+    ds.downsample([args.frac], umi_len=umi_length, seed=args.seed, threads=args.threads, aggregate_only=False,
+            barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
 
     barcodes = np.array([b for b in ds.barcodes['barcode']])
     #tot = ds.spliced_csr(0) + ds.unspliced_csr(0) + ds.ambiguous_csr(0)
@@ -233,5 +234,8 @@ def main(parser, args):
     print(f'Filtering Passed  = {pp:,} [{pp/len(df) * 100.0:.2f}%]')
     print(f'Total Barcodes    = {len(df):,}')
     #print(info)
-    df.to_csv(args.prefix + '_emptydrops.txt.gz', sep='\t', index=False)
+    if args.barcode_prefix is None or args.barcode_prefix == '':
+        df.to_csv(args.prefix + '_emptydrops.txt.gz', sep='\t', index=False)
+    else:
+        df.to_csv(f'{args.prefix}_{args.barcode_prefix}_emptydrops.txt.gz', sep='\t', index=False)
 

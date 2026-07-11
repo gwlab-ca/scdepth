@@ -317,9 +317,13 @@ def find_target_saturation(ds: Downsampler, full_summary: SimpleNamespace,
     frac = nbl.reads_for_saturation(target_sat) / full_summary.countable_reads
     return full_stats, frac
 
-def baseline_fitter(prefix : str):
-    bdf = pd.read_csv(prefix + '_fit_baseline.txt', sep='\t')
-    cdf = pd.read_csv(prefix + '_fit_curve.txt', sep='\t')
+def baseline_fitter(prefix : str, barcode_prefix : str = ''):
+    if barcode_prefix == '':
+        bdf = pd.read_csv(prefix + '_fit_baseline.txt', sep='\t')
+        cdf = pd.read_csv(prefix + '_fit_curve.txt', sep='\t')
+    else:
+        bdf = pd.read_csv(f'{prefix}_{barcode_prefix}_fit_baseline.txt', sep='\t')
+        cdf = pd.read_csv(f'{prefix}_{barcode_prefix}_fit_curve.txt', sep='\t')
     cdf = cdf[cdf.fraction >= 1].copy()
     nbl = NBLibFit()
     nbl.unserialize(bdf.iloc[0].to_dict())

@@ -41,6 +41,21 @@ All commands share a sample prefix, for example, `your_sample/scdepth `.  This p
 
 All of these commands depend on [cache](#cache) which generates a binary encoded and bgzip compressed tag file. For documentation on the tag file format see [here](tag_format.md).
 
+### Notes for Parse WT libraries
+
+I have added support for parse WT v3 libraries. I am not sure if it will work with other parse library types at the moment.
+
+The count command has additional arguments to support sample multiplexing and random hexamer/Poly A primers.
+
+The emptydrops/fit/limit/preseq/genes/stability commands have two additional arguments. These are not documented for each command to avoid redundancy
+
+| Option           | Description                                                                | Default / Required |
+| ---------------- | -------------------------------------------------------------------------- | ------------------ |
+| `--barcode-prefix`      | Select only barcodes starting with this prefix, for parse libraries these prefixes are the samples specified with the `--samples` argument when using `scdepth cache` | **Optional** |
+| `--primer-type`   | Use both primers (merge), poly A only (polyA), or random hexamer (random_hex)  | **Optional**       |
+
+**Important:** The `--barcode-prefix` argument will modify the output files from `<prefix>_cmd_*` to `<prefix>_<barcode_prefix>_cmd_*`
+
 ## API and Example Data
 
 There is a large python API associated with the scdepth downsampling framework documented [here](downsampler.md) with an example notebook in [./notebooks](./notebooks). There is an example pre-procsessed sample in [./example/pbmc_1k_protein_v3](./example/pbmc_1k_protein_v3) that the example notebook uses.

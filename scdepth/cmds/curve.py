@@ -45,7 +45,13 @@ def build_parser(parser):
     return parser
 
 def build_curve(args, full_summary):
-    oprefix = f'{args.prefix}_fit'
+    oprefix = None
+    if args.barcode_prefix is None or args.barcode_prefix == '':
+        oprefix = f'{args.prefix}_fit'
+    else:
+        oprefix = f'{args.prefix}_{args.barcode_prefix}_fit'
+
+
     ldata = libraries.library2ns(args.library)
     calc_sau = (ldata.probe_based == 0)
     ds = Downsampler()
@@ -56,7 +62,9 @@ def build_curve(args, full_summary):
                         target_sat=args.baseline_sat, threads=args.threads, seed=args.seed)
 
     ds.downsample([bfrac], umi_len=full_summary.umi_length, 
-            seed=args.seed, threads=args.threads, aggregate_only=True)
+            seed=args.seed, threads=args.threads, 
+            barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode,
+            aggregate_only=True)
 
     bstats = fn.bulk_stats(ds, full_summary)
     bstats.insert(loc=0, column='sample', value=args.sample)
@@ -86,7 +94,9 @@ def build_curve(args, full_summary):
 
 
     ds.downsample(list(full_fracs['fraction'].to_numpy(float)), umi_len=full_summary.umi_length, 
+                barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode,
                 seed=args.seed, threads=args.threads, aggregate_only=True)
+
     if calc_sau:
         for k in fn.READ_CLASSES[:-1]:
             khist = fn.get_rpm_hist(ds, key=k)[-1].copy()
@@ -97,7 +107,6 @@ def build_curve(args, full_summary):
     curve_stats = fn.bulk_stats(ds, full_summary)
     curve_stats['target_saturation'] = full_fracs['saturation']
     curve_stats.insert(loc=0, column='sample', value=args.sample)
-
 
     fig, (ax, fax) = pl.figax(1, 2, w=6, h=4)
     fig.subplots_adjust(hspace=0.3, wspace=0.15)

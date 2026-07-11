@@ -56,11 +56,11 @@ class Downsampler:
         """
         Clear output memory
         """
-    def downsample(self, fracs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex], umi_len: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex, threads: typing.SupportsInt | typing.SupportsIndex = 1, aggregate_only: bool = False, umi_mode: str = 'directed', correct_multi_umis: bool = True, primer_mode: str = 'merge') -> bool:
+    def downsample(self, fracs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex], umi_len: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex, threads: typing.SupportsInt | typing.SupportsIndex = 1, aggregate_only: bool = False, umi_mode: str = 'directed', correct_multi_umis: bool = True, barcode_prefix: str = '', primer_mode: str = 'merge') -> bool:
         """
         Run downsampling for the given barcodes (optional) and fractions
         """
-    def init(self, prefix: str, mt_prefix: str = '', mt_file: str = '', mod_file: str = '', exclude_file: str = '', barcode_prefix: str = '', max_hist: typing.SupportsInt | typing.SupportsIndex = 50, build_matrices: bool = False, calc_sau: bool = False) -> bool:
+    def init(self, prefix: str, mt_prefix: str = '', mt_file: str = '', mod_file: str = '', exclude_file: str = '', max_hist: typing.SupportsInt | typing.SupportsIndex = 50, build_matrices: bool = False, calc_sau: bool = False) -> bool:
         """
         Initialize the downsampler from a cached prefix
         """

@@ -24,7 +24,7 @@ def read_barcodes(prefix : str):
     barcodes.set_index('barcode', inplace=True, drop=True)
     return barcodes
 
-def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None) -> pd.DataFrame:
+def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None, barcode_prefix : str = '') -> pd.DataFrame:
     barcodes = pd.DataFrame(ds.barcodes)
     barcodes.set_index('barcode', inplace=True, drop=True)
 
@@ -39,6 +39,10 @@ def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None)
     elif os.path.isfile(prefix + '_positions.csv'):
         meta_file = prefix + '_positions.csv'
         barcodes_pos = pd.read_csv(meta_file)
+    elif barcode_prefix != '' and os.path.isfile(f'{prefix}_{barcode_prefix}_emptydrops.txt.gz'):
+        meta_file = f'{prefix}_{barcode_prefix}_emptydrops.txt.gz'
+        barcodes_pos = pd.read_csv(meta_file, sep='\t')[['barcode','is_cell', 'passed']]
+        barcodes_pos['is_cell'] = barcodes_pos['is_cell'].astype(int)
     elif os.path.isfile(prefix + '_emptydrops.txt.gz'):
         meta_file = prefix + '_emptydrops.txt.gz'
         barcodes_pos = pd.read_csv(meta_file, sep='\t')[['barcode','is_cell', 'passed']]

@@ -129,9 +129,14 @@ def build_parser(parser) -> argparse.ArgumentParser:
     return parser
 
 def main(parser, args):
-    oprefix = f'{args.prefix}_preseq'
+    oprefix, prefix = None, None
+    if args.barcode_prefix is None or args.barcode_prefix == '':
+        oprefix = f'{args.prefix}_preseq'
+        prefix = args.prefix
+    else:
+        oprefix = f'{args.prefix}_{args.barcode_prefix}_preseq'
+        prefix = f'{args.prefix}_{args.barcode_prefix}'
     preseq = args.preseq
-    prefix = args.prefix 
 
     if not os.path.isfile(preseq):
         print('Preseq command not found')

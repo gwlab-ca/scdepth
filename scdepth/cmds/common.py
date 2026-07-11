@@ -220,6 +220,11 @@ def prepare_args(parser: argparse.ArgumentParser, use_exc_genes : bool, use_filt
                         help='Maximum bin for the reads per molecule histogram')
     g_common.add_argument('--custom-libs', type=Path, help='Path to JSON file defining custom libraries '
                           '(must be specified if a custom library was used when caching tags)')
+    g_common.add_argument('--barcode-prefix', type=str, help='Only process scRNA library barcodes starting with this prefix, '
+                          'useful to filter specific samples from multiplexed libraries such as Parse WT data',
+                          default='')
+    g_common.add_argument('--primer-type', type=str, help='For scRNA libaries such as Parse WT this permits selecting a primer type or merging both: '
+                          'options are merge/polyA/random_hex', choices=['merge','polyA','random_hex'], default='merge')
     g_common.add_argument('-S', '--seed', type=int, default=42,
                         help='Seed used for downsampling')
 

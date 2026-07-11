@@ -219,13 +219,17 @@ def summarize_pair_df(pair_df, col='median'):
 
 
 def run_stability(args, full_summary):
-    oprefix = f'{args.prefix}_stability'
+    if args.barcode_prefix is None or args.barcode_prefix == '':
+        oprefix = f'{args.prefix}_stability'
+    else:
+        oprefix = f'{args.prefix}_{args.barcode_prefix}_stability'
+
     ldata = libraries.library2ns(args.library)
     is_hd = 'visium_hd' in ldata.library
 
     ds = Downsampler()
     ds.init(args.prefix, max_hist=args.max_hist, build_matrices=True, exclude_file=args.exclude_file)
-    barcodes = fn.read_barcodes_meta(ds, args.prefix)
+    barcodes = fn.read_barcodes_meta(ds, args.prefix, barcode_prefix=args.barcode_prefix)
 
     if is_hd:
         ds.init_visium(rows=barcodes['array_row'].to_numpy(), cols=barcodes['array_col'].to_numpy(),
@@ -237,7 +241,7 @@ def run_stability(args, full_summary):
         args.bin_div = 0
 
 
-    nbl, _, _ = fit.baseline_fitter(args.prefix)
+    nbl, _, _ = fit.baseline_fitter(args.prefix, barcode_prefix = args.barcode_prefix)
 
     if args.recoveries is None:
         args.recoveries = '30,40,50,60,70'
