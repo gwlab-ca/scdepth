@@ -17,7 +17,7 @@ def build_parser(parser) -> argparse.ArgumentParser:
                         help='Library identifier can from scdepth libraries for a list or a custom name')
     g_init.add_argument('--sample-tag', required=False, default="",
                         help='Sample identifier tag for multiplex libraries such as parse')
-    g_init.add_argument('--samples', required=False, default="",
+    g_init.add_argument('--samples', required=False, default=None,
                         help='Comma separated list of valid samples')
     #g_init.add_argument('--benchmark', action='store_true',
     #                    help='Calculate timing / memory usage')
@@ -69,8 +69,13 @@ def process_bam(
           #'random_hex_re': '',
           #'random_hex_value': '',
     bc = scdepth.bindings.BarcodeCounter()
+    bc_samples = []
+    if samples is None or len(samples) == 0:
+        bc_samples = []
+    else:
+        bc_samples = list(samples.split(','))
     bc.init(lib_type, fwd=(not res.five_prime_like), barcode_tag=res.CB_tag, barcode_re=res.CB_re, umi_tag=res.UR_tag, 
-            barcode_length = res.CB_length, umi_length = res.UR_length, samples=samples, sample_tag=sample_tag,
+            barcode_length = res.CB_length, umi_length = res.UR_length, samples=bc_samples, sample_tag=sample_tag,
             random_hex_re=res.random_hex_re, random_hex_value=res.random_hex_value)
     if not quiet and res.probe_based:
         print('Using probe based gene ids')
