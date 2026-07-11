@@ -59,7 +59,7 @@ Custom libraries are defined as a JSON object mapping **library name → specifi
 | `sample_group`     | string         | One of: `scrna`, `visium`, `visium_hd`, etc.                                                                                   |
 | `probe_based`      | bool           | Whether the protocol is probe-based                                                                                            |
 | `has_bins`         | bool           | Whether spatial binning is used                                                                                                |
-| `random_hex_re`    | string (regex) | Regex pattern used to extract if a read is random hexamer based from the qname, there must be a single capture group or blank  |
+| `random_hex_re`    | string (regex) | Regex pattern used to extract if a read is random hexamer based from the qname, there must be a single capture group or blank, this RE should also only accept valid values not blankly take anything as its the primary filter  |
 | `random_hex_value` | string         | The expected value from the RE pattern or blank                                                                                |
 
 ---

@@ -206,23 +206,18 @@ unsigned int scdepth::check_junctions(const std::vector<Exon> & blocks, const Ge
     return found;
 }
 
-bool extract_flag_from_qname(std::string_view qname, const std::regex& pattern, std::string_view true_value){
-    std::cmatch match;
+bool extract_flag_from_qname(std::string_view qname, const std::regex& pattern, std::string_view true_value, bool & error){
+    std::match_results<std::string_view::const_iterator> match;
 
-    if (!std::regex_search(qname.begin(), qname.end(), match, pattern)) {
-        throw std::runtime_error(
-            "Could not extract RT type from query name: " +
-            std::string(qname)
-        );
+    if (!std::regex_search(qname.begin(), qname.end(), match, pattern) ||
+        match.size() < 2)
+    {
+        error = true;
+        return false;
     }
 
-    if (match.size() < 2) {
-        throw std::runtime_error(
-            "RT-type regex must contain one capture group"
-        );
-    }
-
-    return match[1].str() == true_value;
+    error = false;
+    return std::string_view(match[1].first, match[1].length()) == true_value;
 }
 
 size_t BarcodeCounter::process_reads(size_t chunk){
@@ -316,11 +311,17 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         //std::cout << "Read overlaps = " << overlaps.size() << " xs = " << xs << " pos = " << lft << " - " << rgt << "\n";
 
         if (!random_hex_regex_str_.empty()) {
+            bool hex_error = false;
             random_hex = extract_flag_from_qname(
                 bam_get_qname(rec),
                 random_hex_re_,
-                random_hex_value_
+                random_hex_value_,
+                hex_error
             );
+            if(hex_error){
+                bad_tags_++;
+                continue;
+            }
         }
 
         if(has_probes_){
