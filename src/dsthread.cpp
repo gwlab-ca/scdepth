@@ -61,8 +61,11 @@ void DownsamplerThread::operator()(){
         //get the first barcode
         auto & bc = data_.barcodes[i];
         processed++;
-
-        if(bc.countable == 0){
+        bool passed = true;
+        if(!data_.barcode_prefix.empty() && !bc.barcode.starts_with(data_.barcode_prefix)){
+            passed = false;
+        }
+        if(bc.countable == 0 || !passed){
             if(out.build_mats){
                 for(size_t i = 0; i < data_.output.fracs.size(); i++){
                     if(out.calc_sau){
