@@ -20,7 +20,7 @@ struct DirectedEdges{
 
 void UMIDirectional::downsample(double frac, uint32_t umi_len,
         const BarcodeCount & bc, const BarcodeData & bd, UMIResults & out,
-        bool directional, bool correct_multi_umis){ //, bool profile_singles){
+        bool directional, bool correct_multi_umis, PrimerMode primer_mode){ //, bool profile_singles){
 
     umi_len_ = umi_len;
     pcg64 rng(bc.seed);
@@ -36,10 +36,6 @@ void UMIDirectional::downsample(double frac, uint32_t umi_len,
     out.dis_reads = 0;
     out.dis_ambig = 0;
     out.dis_mols = 0;
-    //out.total_singles = 0;
-    //out.ed0_cross = 0;
-    //out.ed1_same = 0;
-    //out.ed1_cross = 0;
 
     //size_t lost = 0, processed = 0;
     while(it != bd.counts.end()){
@@ -48,6 +44,13 @@ void UMIDirectional::downsample(double frac, uint32_t umi_len,
         n_nodes_ = 0;
         //s  nodes = 0;
         while(it != bd.counts.end() && start->gene == it->gene){
+            if((primer_mode == PrimerMode::PolyAOnly && it->is_random_hex()) || 
+                    (primer_mode == PrimerMode::RandomHexOnly && !it->is_random_hex()))
+            {
+               it++;
+               continue;
+            }
+
             uint32_t spliced = 0, unspliced = 0, ambiguous = 0;
             if(frac < 1.0){
                 if(it->spliced > 0){
@@ -134,18 +137,12 @@ void UMIDirectional::build_graph_brute_(T build_edge){
         auto & n1 = nodes_[i];
         for(size_t j = i + 1; j < n_nodes_; j++){
             auto & n2 = nodes_[j];
+            //no links between different primers
+            if(n1.is_random_hex() != n2.is_random_hex()) continue;
             auto mm = n1.umi ^ n2.umi;
             auto cnt = __builtin_popcount((mm | (mm >> 1)) & mask);
             if(cnt != 1) continue;
             build_edge(i, j, n1, n2);
-            /*
-            if(n1.total() >= (n2.total() * 2 - 1)){
-                n1.edges.push_back(j);
-            }
-            if(n2.total() >= (n1.total() * 2 - 1)){
-                n2.edges.push_back(i);
-            }
-            */
         }
     }
 }
@@ -164,40 +161,21 @@ void UMIDirectional::build_graph_hash_(T build_edge){
             uint32_t m = ~(0b11u << s); 
             uint32_t b = (n1.umi >> s) & 0b11u;
             for(uint32_t nb = 0; nb < 4; nb++){
-                if(b  == nb) continue;
+                if(b == nb) continue;
                 uint32_t nu = (n1.umi & m) | (nb << s);
                 auto it = umi_map_.find(nu);
                 if(it == umi_map_.end()) continue;
                 auto j = it->second;
                 if(j <= i) continue;
                 auto & n2 = nodes_[j];
+                if(n1.is_random_hex() != n2.is_random_hex()) continue;
                 build_edge(i, j, n1, n2);
-                /*
-                if(n1.total() >= (n2.total() * 2 - 1)){
-                    n1.edges.push_back(j);
-                }
-                if(n2.total() >= (n1.total() * 2 - 1)){
-                    n2.edges.push_back(i);
-                }
-                */
             }
         }
     }
 }
 
 void UMIDirectional::correct_umis_(uint32_t gene, UMIResults & out){
-    /*
-    if(weakly_){
-        //if we want weakly connected components
-        //this is more like umi-tools
-        rev_.resize_clear(n_nodes_);
-        for(size_t i = 0; i < n_nodes_; i++){
-            for(auto e : nodes_[i].edges){
-                rev_[e].push_back(i);
-            }
-        }
-    }
-    */
     idx_.resize(n_nodes_);
     std::iota(idx_.begin(), idx_.end(), 0);
     std::sort(idx_.begin(), idx_.end(),
@@ -283,10 +261,6 @@ void UMIDirectional::correct_multi_umis_(UMIResults & out){ //, bool profile_sin
         }
     );
 
-    //if(profile_singles){
-    //    profile_singles_(out);
-    //}
-
     /*
     std::cout << "  correcting for ambiguous umis = " << out.umis.size() << "\n";
     for(auto & u : out.umis){
@@ -316,51 +290,3 @@ void UMIDirectional::correct_multi_umis_(UMIResults & out){ //, bool profile_sin
 
     std::sort(out.umis.begin(), out.umis.end());
 }
-
-/*
-void UMIDirectional::profile_singles_(UMIResults & out){
-    ed_umi_map_.clear();
-    ed_umi_map_.reserve(out.umis.size());
-    //umi_map_.reserve(2 * n_nodes_);
-
-    for(size_t i = 0; i < out.umis.size(); i++){
-        ed_umi_map_[out.umis[i].umi].push_back(i);
-    }
-    for(size_t i = 0; i < out.umis.size(); i++){
-        auto & n1 = out.umis[i];
-        if(n1.total() != 1) continue;
-        out.total_singles++;
-        //all the nodes with n1.umi
-        auto & t1 = ed_umi_map_[n1.umi];
-        bool has_same = false;
-        bool has_cross = (t1.size() > 1);
-        bool has_diff = false;
-
-        for(uint32_t p = 0; p < umi_len_; p++){
-            uint32_t s = 2 * p;
-            uint32_t m = ~(0b11u << s); 
-            uint32_t b = (n1.umi >> s) & 0b11u;
-            for(uint32_t nb = 0; nb < 4; nb++){
-                if(b == nb) continue;
-                uint32_t nu = (n1.umi & m) | (nb << s);
-                auto it = ed_umi_map_.find(nu);
-                if(it == ed_umi_map_.end()) continue;
-                auto & t2 = it->second;
-                for(auto j : t2){
-                    if(out.umis[j].gene == n1.gene) has_same = true;
-                    else{ has_diff = true; break; }
-                }
-                if(has_diff) break;
-            }
-        }
-
-        if(has_cross){
-            out.ed0_cross++;
-        }else if(has_diff){
-            out.ed1_cross++;
-        }else if(has_same){
-            out.ed1_same++;
-        }
-    }
-}
-*/

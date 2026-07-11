@@ -34,6 +34,10 @@ void scdepth::bind_barcode_counter(py::module_& m) {
              py::arg("barcode_tag"),
              py::arg("barcode_re"),
              py::arg("umi_tag"),
+             py::arg("sample_tag") = "",
+             py::arg("samples") = std::vector<std::string>{},
+             py::arg("random_hex_re") = "",
+             py::arg("random_hex_value") = "",
              py::arg("barcode_length") = 0u,
              py::arg("umi_length") = 0u,
              "Configure the scRNA-seq library properties")

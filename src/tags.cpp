@@ -172,6 +172,17 @@ inline bool parse_barcode_line(const std::string& line, BarcodeCount& bc){
     if(!next_tok(sv, tok) || !parse_uint<uint64_t>(tok, bc.offset)) return false;
     if(!next_tok(sv, tok) || !parse_uint<uint32_t>(tok, bc.total_data_bytes)) return false;
     bc.seed = 0;
+    bc.random_hex = 0;
+    bc.poly_a     = 0;
+
+    // Optional random_hex
+    if(next_tok(sv, tok)){
+        if(!parse_uint<uint32_t>(tok, bc.random_hex))
+            return false;
+
+        if(!next_tok(sv, tok) || !parse_uint<uint32_t>(tok, bc.poly_a))
+            return false;
+    }
     return true;
 }
 

@@ -157,6 +157,8 @@ struct DownsampleResults{
     std::vector<uint64_t>               mols_ambig;
 
     std::vector<GeneCountMatrix>        gcounts;
+    std::string                         primer_mode;
+    std::string                         barcode_prefix;
 
     //std::vector<uint32_t>               cell_mhist;
 

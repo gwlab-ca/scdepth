@@ -9,28 +9,34 @@ from typing import Any, Mapping
 
 columns = ['five_prime_like', 'CB_tag', 'CB_length', 'CB_re', 
             'UR_tag', 'UR_length', 'sample_group', 'probe_based',
-           'has_bins']
+           'has_bins', 'random_hex_re', 'random_hex_value']
 visium_re = r"^s_\d{3}um_\d{5}_\d{5}-\d+$"
 seq_re = r"^[ACGT]+-\d+$"
+
+parse_cb_re = r"^\d{1,3}_\d{1,3}_\d{1,3}$"
+parse_hex_re = r'^[^_]+_[^_]+_[^_]+__([RT])__'
+
 DEFAULT_LIBS = {
     #scRNA 3-prime
-    '10X_3p_v2':   (False, 'CB', 0, seq_re, 'UR', 10, 'scrna', False, False),
-    '10X_3p_v3':   (False, 'CB', 0, seq_re, 'UR', 12, 'scrna', False, False),
-    '10X_3p_v31':  (False, 'CB', 0, seq_re, 'UR', 12, 'scrna', False, False),
-    '10X_3p_v4':   (False, 'CB', 0, seq_re, 'UR', 12, 'scrna', False, False),
+    '10X_3p_v2':   (False, 'CB', 0, seq_re, 'UR', 10, 'scrna', False, False, "", ""),
+    '10X_3p_v3':   (False, 'CB', 0, seq_re, 'UR', 12, 'scrna', False, False, "", ""),
+    '10X_3p_v31':  (False, 'CB', 0, seq_re, 'UR', 12, 'scrna', False, False, "", ""),
+    '10X_3p_v4':   (False, 'CB', 0, seq_re, 'UR', 12, 'scrna', False, False, "", ""),
 
     #scRNA 5-prime
-    '10X_5p_v2':   (True,  'CB', 0, seq_re, 'UR', 10, 'scrna', False, False),
-    '10X_5p_v3':   (True,  'CB', 0, seq_re, 'UR', 12, 'scrna', False, False),
+    '10X_5p_v2':   (True,  'CB', 0, seq_re, 'UR', 10, 'scrna', False, False, "", ""),
+    '10X_5p_v3':   (True,  'CB', 0, seq_re, 'UR', 12, 'scrna', False, False, "", ""),
 
     #probe based
-    '10X_flex_v1': (True,  'CB', 0, seq_re, 'UR', 12, 'scrna', True, False),
-    '10X_visium': (True,  'CB', 0, seq_re, 'UR', 12, 'visium', True, True),
-    '10X_visium_hd': (True,  'CB', 0, visium_re, 'UR', 9, 'visium_hd', True, True),
+    '10X_flex_v1': (True,  'CB', 0, seq_re, 'UR', 12, 'scrna', True, False, "", ""),
+    '10X_visium': (True,  'CB', 0, seq_re, 'UR', 12, 'visium', True, True, "", ""),
+    '10X_visium_hd': (True,  'CB', 0, visium_re, 'UR', 9, 'visium_hd', True, True, "", ""),
 
     #non-probe based spatial
-    '10X_visium_3p': (False,  'CB', 0, seq_re, 'UR', 12, 'visium', False, True),
-    '10X_visium_hd_3p': (False,  'CB', 0, visium_re, 'UR', 9, 'visium_hd', False, True),
+    '10X_visium_3p': (False,  'CB', 0, seq_re, 'UR', 12, 'visium', False, True, "", ""),
+    '10X_visium_hd_3p': (False,  'CB', 0, visium_re, 'UR', 9, 'visium_hd', False, True, "", ""),
+
+    'Parse_WT_v3': (False, 'CB', 0, parse_cb_re, 'pN', 10, 'scrna', False, False, parse_hex_re, 'R'),
 }
 
 libs: dict[str, tuple] = dict(DEFAULT_LIBS)
@@ -67,6 +73,15 @@ def _normalize_and_validate_spec(name: str, spec: Mapping[str, Any]) -> tuple:
     except re.error as e:
         raise LibrarySpecError(f'{name}: CB_re is not a valid regex: {e}') from e
 
+    hex_re = spec['random_hex_re']
+    if not isinstance(hex_re, str):
+        raise LibrarySpecError(f'{name}: random_hex_re must be a non-empty regex string')
+    if len(hex_re) > 0:
+        try:
+            re.compile(cb_re)
+        except re.error as e:
+            raise LibrarySpecError(f'{name}: random_hex_re is not a valid regex: {e}') from e
+
     return tuple(spec[c] for c in columns)
 
 
@@ -86,6 +101,8 @@ def add_custom_libraries(path: str | Path, *, override: bool = False) -> None:
           'sample_group': 'scrna',
           'probe_based': false,
           'has_bins': false
+          'random_hex_re': '',
+          'random_hex_value': '',
         }
       }
     """

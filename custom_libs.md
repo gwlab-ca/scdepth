@@ -37,7 +37,9 @@ Custom libraries are defined as a JSON object mapping **library name → specifi
     "UR_length": 12,
     "sample_group": "scrna",
     "probe_based": false,
-    "has_bins": false
+    "has_bins": false,
+    "random_hex_re": "",
+    "random_hex_value": "",
   }
 }
 ```
@@ -46,17 +48,19 @@ Custom libraries are defined as a JSON object mapping **library name → specifi
 
 ## Field Definitions
 
-| Field             | Type           | Description                                    |
-| ----------------- | -------------- | ---------------------------------------------- |
-| `five_prime_like` | bool           | Whether the library behaves like a 5′ protocol |
-| `CB_tag`          | string         | BAM tag used for cell barcode                  |
-| `CB_length`       | int ≥ 0        | Expected barcode length (0 = variable)         |
-| `CB_re`           | string (regex) | Regex pattern used to validate barcodes        |
-| `UR_tag`          | string         | BAM tag used for UMI                           |
-| `UR_length`       | int ≥ 0        | Expected UMI length                            |
-| `sample_group`    | string         | One of: `scrna`, `visium`, `visium_hd`, etc.   |
-| `probe_based`     | bool           | Whether the protocol is probe-based            |
-| `has_bins`        | bool           | Whether spatial binning is used                |
+| Field              | Type           | Description                                                                                                                    |
+| ------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `five_prime_like`  | bool           | Whether the library behaves like a 5′ protocol                                                                                 |
+| `CB_tag`           | string         | BAM tag used for cell barcode                                                                                                  |
+| `CB_length`        | int ≥ 0        | Expected barcode length (0 = variable)                                                                                         |
+| `CB_re`            | string (regex) | Regex pattern used to validate barcodes                                                                                        |
+| `UR_tag`           | string         | BAM tag used for UMI                                                                                                           |
+| `UR_length`        | int ≥ 0        | Expected UMI length                                                                                                            |
+| `sample_group`     | string         | One of: `scrna`, `visium`, `visium_hd`, etc.                                                                                   |
+| `probe_based`      | bool           | Whether the protocol is probe-based                                                                                            |
+| `has_bins`         | bool           | Whether spatial binning is used                                                                                                |
+| `random_hex_re`    | string (regex) | Regex pattern used to extract if a read is random hexamer based from the qname, there must be a single capture group or blank  |
+| `random_hex_value` | string         | The expected value from the RE pattern or blank                                                                                |
 
 ---
 

@@ -14,10 +14,12 @@
 
 namespace scdepth{
 using gtl::flat_hash_map;
+using gtl::flat_hash_set;
 
 class BarcodeCounter{
     public:
         using hmap = flat_hash_map<std::string, uint32_t>;
+        using smap = flat_hash_set<std::string>;
         ~BarcodeCounter(){
             if(bh_ != nullptr){
                 sam_hdr_destroy(bh_);
@@ -34,7 +36,9 @@ class BarcodeCounter{
                 bool discard_unknown_juncs = false, bool probes = false);
 
         void init(const std::string & lib_string, bool fwd, const std::string & barcode_tag, 
-                const std::string & barcode_re, const std::string & umi_tag,
+                const std::string & barcode_re, const std::string & umi_tag, 
+                const std::string & sample_tag = "", const std::vector<std::string> & samples = {},
+                const std::string & random_hex_re = "", const std::string & random_hex_value = "",
                 uint32_t barcode_length = 0, uint32_t umi_length = 0);
 
         bool prepare_bam(const std::string & gtf, const std::string & bam, const std::string & out,
@@ -70,15 +74,21 @@ class BarcodeCounter{
         RefTrees                     gtrees_;
         TagShards                    shards_;
         std::regex                   barcode_re_;
+        std::regex                   random_hex_re_;
         hmap                         barcode_map_;
         hmap                         gene_map_;
         std::string                  bam_file_;
         std::string                  out_file_;
         std::string                  lib_string_;
         std::string                  barcode_regex_str_;
+        std::string                  random_hex_regex_str_;
+        std::string                  random_hex_value_;
 
+        std::vector<std::string>     samples_;
+        smap                         sample_set_;
         char                         barcode_tag_[2];
         char                         umi_tag_[2];
+        char                         sample_tag_[2];
         samFile                    * bf_ = nullptr;
         sam_hdr_t                  * bh_ = nullptr;
         uint64_t                     low_quality_ = 0;

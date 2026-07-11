@@ -25,6 +25,7 @@ class Downsampler{
 
         bool init(const std::string & prefix, const std::string & mt_prefix, const std::string & mt_file, 
                 const std::string & mod_file, const std::string & exclude_file,  
+                const std::string & barcode_prefix,
                 size_t max_hist = 40, bool build_matrices = false, bool calc_sau = false);
 
         bool init_visium(const std::vector<uint32_t> & rows, const std::vector<uint32_t> & cols, 
@@ -39,8 +40,8 @@ class Downsampler{
 
         bool downsample(std::vector<double> & fracs, 
                 uint32_t umi_len, uint64_t seed, unsigned int threads = 1, bool aggregate_only = false,
-                const std::string & umi_mode = "directed", bool correct_multi_umis = true);
-                //bool profile_umi_singletons = false);
+                const std::string & umi_mode = "directed", bool correct_multi_umis = true,
+                const std::string & primer_mode = "merge");
 
         bool write_gene_mats(const std::string & out, const std::vector<uint32_t> & idx,
                 uint32_t bin_div = 0);
@@ -56,15 +57,22 @@ class Downsampler{
         std::vector<bool>           exclude_filter;
         std::vector<bool>           mod_filter;
         std::string                 prefix;
+        std::string                 barcode_prefix;
+        std::string                 primer_mode_str = "";
+
         uint32_t                    bin_div = 0;
         uint32_t                    total_rows = 0;
         uint32_t                    total_cols = 0;
+
+        PrimerMode                  primer_mode = PrimerMode::Merge;
+
         bool                        has_visium = false;
         bool                        aggregate_only = false;
         bool                        umi_directed = true;
         bool                        umi_multi = false;
         bool                        has_mt = false;
         bool                        has_mod = false;
+        bool                        primer_filter = false;
 
     private:
         std::vector<size_t>         chunks_;

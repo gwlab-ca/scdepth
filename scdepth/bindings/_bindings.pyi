@@ -27,19 +27,19 @@ class BarcodeCounter:
         """
         Finalize and flush outputs
         """
-    def init(self, lib_string: str, fwd: bool, barcode_tag: str, barcode_re: str, umi_tag: str, barcode_length: typing.SupportsInt = 0, umi_length: typing.SupportsInt = 0) -> None:
+    def init(self, lib_string: str, fwd: bool, barcode_tag: str, barcode_re: str, umi_tag: str, sample_tag: str = '', samples: collections.abc.Sequence[str] = [], random_hex_re: str = '', random_hex_value: str = '', barcode_length: typing.SupportsInt | typing.SupportsIndex = 0, umi_length: typing.SupportsInt | typing.SupportsIndex = 0) -> None:
         """
         Configure the scRNA-seq library properties
         """
-    def prepare_bam(self, gtf: str, bam: str, out: str, threads: typing.SupportsInt = 1, max_tags: typing.SupportsInt = 200000000, max_tag_frac: typing.SupportsFloat = 0.95) -> bool:
+    def prepare_bam(self, gtf: str, bam: str, out: str, threads: typing.SupportsInt | typing.SupportsIndex = 1, max_tags: typing.SupportsInt | typing.SupportsIndex = 200000000, max_tag_frac: typing.SupportsFloat | typing.SupportsIndex = 0.95) -> bool:
         """
         Prepare the bam for processing
         """
-    def process_reads(self, chunk: typing.SupportsInt) -> int:
+    def process_reads(self, chunk: typing.SupportsInt | typing.SupportsIndex) -> int:
         """
         Process up to `chunk` reads and return the number processed
         """
-    def set_count_parameters(self, min_gene: typing.SupportsFloat = 0.95, min_gene_bases: typing.SupportsInt = 40, min_exonic: typing.SupportsFloat = 0.95, min_intronic: typing.SupportsInt = 15, min_qual: typing.SupportsInt = 255, discard_unknown_juncs: bool = False, probes: bool = False) -> None:
+    def set_count_parameters(self, min_gene: typing.SupportsFloat | typing.SupportsIndex = 0.95, min_gene_bases: typing.SupportsInt | typing.SupportsIndex = 40, min_exonic: typing.SupportsFloat | typing.SupportsIndex = 0.95, min_intronic: typing.SupportsInt | typing.SupportsIndex = 15, min_qual: typing.SupportsInt | typing.SupportsIndex = 255, discard_unknown_juncs: bool = False, probes: bool = False) -> None:
         """
         Configure read filtering
         """
@@ -50,21 +50,21 @@ class BarcodeCounter:
 class Downsampler:
     def __init__(self) -> None:
         ...
-    def ambiguous_csr(self, step: typing.SupportsInt) -> typing.Any:
+    def ambiguous_csr(self, step: typing.SupportsInt | typing.SupportsIndex) -> typing.Any:
         ...
     def clear_output(self) -> None:
         """
         Clear output memory
         """
-    def downsample(self, fracs: collections.abc.Sequence[typing.SupportsFloat], umi_len: typing.SupportsInt, seed: typing.SupportsInt, threads: typing.SupportsInt = 1, aggregate_only: bool = False, umi_mode: str = 'directed', correct_multi_umis: bool = True) -> bool:
+    def downsample(self, fracs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex], umi_len: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex, threads: typing.SupportsInt | typing.SupportsIndex = 1, aggregate_only: bool = False, umi_mode: str = 'directed', correct_multi_umis: bool = True, primer_mode: str = 'merge') -> bool:
         """
         Run downsampling for the given barcodes (optional) and fractions
         """
-    def init(self, prefix: str, mt_prefix: str = '', mt_file: str = '', mod_file: str = '', exclude_file: str = '', max_hist: typing.SupportsInt = 50, build_matrices: bool = False, calc_sau: bool = False) -> bool:
+    def init(self, prefix: str, mt_prefix: str = '', mt_file: str = '', mod_file: str = '', exclude_file: str = '', barcode_prefix: str = '', max_hist: typing.SupportsInt | typing.SupportsIndex = 50, build_matrices: bool = False, calc_sau: bool = False) -> bool:
         """
         Initialize the downsampler from a cached prefix
         """
-    def init_visium(self, rows: collections.abc.Sequence[typing.SupportsInt], cols: collections.abc.Sequence[typing.SupportsInt], in_tissue: collections.abc.Sequence[typing.SupportsInt], countable: collections.abc.Sequence[typing.SupportsInt], total: collections.abc.Sequence[typing.SupportsInt], total_rows: typing.SupportsInt, total_cols: typing.SupportsInt) -> bool:
+    def init_visium(self, rows: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], cols: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], in_tissue: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], countable: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], total: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], total_rows: typing.SupportsInt | typing.SupportsIndex, total_cols: typing.SupportsInt | typing.SupportsIndex) -> bool:
         """
         Initialize the downsampler to create binned tiles/barcodes for visium HD data
         """
@@ -72,19 +72,19 @@ class Downsampler:
         """
         Reset visium tile aggregation information
         """
-    def spliced_csr(self, step: typing.SupportsInt) -> typing.Any:
+    def spliced_csr(self, step: typing.SupportsInt | typing.SupportsIndex) -> typing.Any:
         ...
-    def total_csr(self, step: typing.SupportsInt) -> typing.Any:
+    def total_csr(self, step: typing.SupportsInt | typing.SupportsIndex) -> typing.Any:
         ...
-    def total_csr_bin(self, step: typing.SupportsInt, bin_div: typing.SupportsInt) -> typing.Any:
+    def total_csr_bin(self, step: typing.SupportsInt | typing.SupportsIndex, bin_div: typing.SupportsInt | typing.SupportsIndex) -> typing.Any:
         ...
-    def unspliced_csr(self, step: typing.SupportsInt) -> typing.Any:
+    def unspliced_csr(self, step: typing.SupportsInt | typing.SupportsIndex) -> typing.Any:
         ...
-    def write_gene_baseline(self, output: str, idx: collections.abc.Sequence[typing.SupportsInt], step: typing.SupportsInt = 0, bin_div: typing.SupportsInt = 0) -> bool:
+    def write_gene_baseline(self, output: str, idx: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], step: typing.SupportsInt | typing.SupportsIndex = 0, bin_div: typing.SupportsInt | typing.SupportsIndex = 0) -> bool:
         """
         Write the gene detection full count matrix to a file for comparisons (optionally bin for visium HD data)
         """
-    def write_gene_mats(self, output: str, idx: collections.abc.Sequence[typing.SupportsInt], bin_div: typing.SupportsInt = 0) -> bool:
+    def write_gene_mats(self, output: str, idx: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], bin_div: typing.SupportsInt | typing.SupportsIndex = 0) -> bool:
         """
         Write the gene detection matrices to a file for comparisons (optionally bin for visium HD data)
         """
@@ -132,6 +132,11 @@ class Downsampler:
     def ambiguous_reads(self) -> numpy.typing.NDArray[numpy.uint64]:
         """
         Number of ambiguous reads
+        """
+    @property
+    def barcode_prefix(self) -> str:
+        """
+        Number of downsampling fractions
         """
     @property
     def barcodes(self) -> dict:
@@ -197,6 +202,11 @@ class Downsampler:
     def molecules_discarded(self) -> numpy.typing.NDArray[numpy.uint64]:
         """
         Number of molecules lost to ambiguous UMI/gene mappings
+        """
+    @property
+    def primer_mode(self) -> str:
+        """
+        Number of downsampling fractions
         """
     @property
     def reads_discarded(self) -> numpy.typing.NDArray[numpy.uint64]:
@@ -348,7 +358,7 @@ class Downsampler:
         """
         Number of unspliced reads
         """
-def aggregate_visium_bins(downsampler: Downsampler, step: typing.SupportsInt, row_div: typing.SupportsInt, col_div: typing.SupportsInt) -> tuple:
+def aggregate_visium_bins(downsampler: Downsampler, step: typing.SupportsInt | typing.SupportsIndex, row_div: typing.SupportsInt | typing.SupportsIndex, col_div: typing.SupportsInt | typing.SupportsIndex) -> tuple:
     """
     Aggregate per-barcode outputs into Visium HD bins. Returns a dict of 1d numpy arrays.
     """

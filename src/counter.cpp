@@ -28,6 +28,8 @@ std::pair<int, int> extract_coords(const std::string& s) {
 
 void BarcodeCounter::init(const std::string & lib_string, bool fwd, const std::string & barcode_tag, 
         const std::string & barcode_re, const std::string & umi_tag,
+        const std::string & sample_tag, const std::vector<std::string> & samples,
+        const std::string & random_hex_re, const std::string & random_hex_value,
         uint32_t barcode_length, uint32_t umi_length)
 {
     if(fwd) strand_ = StrandMode::TAG_FWD; 
@@ -38,6 +40,17 @@ void BarcodeCounter::init(const std::string & lib_string, bool fwd, const std::s
     barcode_length_ = barcode_length;
     umi_length_ = umi_length;
     barcode_regex_str_ = barcode_re;
+    random_hex_regex_str_ = random_hex_re;
+    random_hex_value_ = random_hex_value;
+    if(samples.empty() != sample_tag.empty()){
+        std::cerr << "sample ids and sample_tag must both be empty or specified\n";
+        exit(1);
+    }
+    sample_tag_[0] = sample_tag[0]; sample_tag_[1] = sample_tag[1]; 
+    samples_ = samples;
+    for(auto & s : samples){
+        sample_set_.insert(s);
+    }
     //std::cout << "barcode tag = " << barcode_tag << " len = " << barcode_length << " regex = " << barcode_regex_str_ << "\n";
     try{
         barcode_re_ = std::regex(
@@ -49,6 +62,20 @@ void BarcodeCounter::init(const std::string & lib_string, bool fwd, const std::s
             << " regex = " << barcode_re 
             << "\n";
         exit(1);
+    }
+
+    if(!random_hex_regex_str_.empty()){
+        try{
+            random_hex_re_ = std::regex(
+                    random_hex_re,
+                    std::regex::ECMAScript | std::regex::optimize
+                    );
+        }catch(const std::regex_error & e){
+            std::cerr << "Error compiling random_hex_re_ regex " << e.what() << " code = " << e.code() 
+                << " regex = " << random_hex_re 
+                << "\n";
+            exit(1);
+        }
     }
 }
 
@@ -179,6 +206,25 @@ unsigned int scdepth::check_junctions(const std::vector<Exon> & blocks, const Ge
     return found;
 }
 
+bool extract_flag_from_qname(std::string_view qname, const std::regex& pattern, std::string_view true_value){
+    std::cmatch match;
+
+    if (!std::regex_search(qname.begin(), qname.end(), match, pattern)) {
+        throw std::runtime_error(
+            "Could not extract RT type from query name: " +
+            std::string(qname)
+        );
+    }
+
+    if (match.size() < 2) {
+        throw std::runtime_error(
+            "RT-type regex must contain one capture group"
+        );
+    }
+
+    return match[1].str() == true_value;
+}
+
 size_t BarcodeCounter::process_reads(size_t chunk){
     if(done_) return 0;
     size_t processed = 0;
@@ -212,14 +258,12 @@ size_t BarcodeCounter::process_reads(size_t chunk){
 
         auto cb_len = strlen(BC);
         auto umi_len = strlen(UMI);
+        int random_hex = 0;
 
-        if(barcode_length_ == 0){
-            barcode_length_ = cb_len;
-        }
         if(umi_length_ == 0){
             umi_length_ = umi_len;
         }
-        if(cb_len != barcode_length_ || umi_len != umi_length_){
+        if((barcode_length_ != 0 && cb_len != barcode_length_) || umi_len != umi_length_){
             bad_tags_++;
             //std::cout << "bad tag length cb = " << cb_len << " vs " << barcode_length_ 
             //    << " umi = " << umi_len << " vs " << umi_length_ << "\n";
@@ -231,7 +275,23 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             //std::cout << "bad CB RE match CB = " << BC << "\n";
             continue;
         }
-        barcode.assign(BC, BC + barcode_length_);
+
+        if(!sample_set_.empty()){
+            ptr = bam_aux_get(rec, sample_tag_);
+            char * sample = ptr == NULL ? NULL : bam_aux2Z(ptr);
+            if(sample == NULL || sample_set_.find(sample) == sample_set_.end()){
+                bad_tags_++;
+                continue;
+            }
+            barcode.assign(sample, strlen(sample));
+            barcode += '_';
+            barcode.append(BC, BC + strlen(BC));
+        }else{
+            barcode.assign(BC, BC + strlen(BC));
+        }
+
+
+
         std::tie(umi, umi_okay) = seq2int(UMI, umi_length_);
         if(!umi_okay){
             //std::cout << "bad UMI UMI = " << UMI << "\n";
@@ -254,7 +314,15 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         uint32_t rgt = bam_endpos(rec) - 1;
         char xs = read2strand_(rec);
         //std::cout << "Read overlaps = " << overlaps.size() << " xs = " << xs << " pos = " << lft << " - " << rgt << "\n";
-        // no gene overlap
+
+        if (!random_hex_regex_str_.empty()) {
+            random_hex = extract_flag_from_qname(
+                bam_get_qname(rec),
+                random_hex_re_,
+                random_hex_value_
+            );
+        }
+
         if(has_probes_){
             auto ptr = bam_aux_get(rec, "GX");
             char * GX = ptr == NULL ? NULL : bam_aux2Z(ptr);
@@ -273,10 +341,12 @@ size_t BarcodeCounter::process_reads(size_t chunk){
                 }
             }
             RawTag tag;
-            tag.make_tag(bidx, gidx, umi, 0, 0);
+            tag.make_tag(bidx, gidx, umi, 0, 0, random_hex);
             ambiguous_reads_++;
             countable_reads_++;
             barcode_counts_[bidx].countable++;
+            if(random_hex) barcode_counts_[bidx].random_hex++;
+            else           barcode_counts_[bidx].poly_a++;
             shards_.add_tag(rec->core.tid, rec->core.pos, tag);
             continue;
         }
@@ -367,28 +437,29 @@ size_t BarcodeCounter::process_reads(size_t chunk){
                 }
             }
         }
-
         RawTag tag;
         if((scount + acount) == 1){
+            if(random_hex) barcode_counts_[bidx].random_hex++;
+            else           barcode_counts_[bidx].poly_a++;
+            barcode_counts_[bidx].countable++;
+            countable_reads_++;
             if(scount == 1){
-                tag.make_tag(bidx, sgidx, umi, 1, 0);
+                tag.make_tag(bidx, sgidx, umi, 1, 0, random_hex);
                 //std::cout << " spliced = " << sgidx;
                 spliced_reads_++;
-                countable_reads_++;
-                barcode_counts_[bidx].countable++;
             }else{
-                tag.make_tag(bidx, agidx, umi, 0, 0);
+                tag.make_tag(bidx, agidx, umi, 0, 0, random_hex);
                 //std::cout << " ambiguous = " << agidx;
                 ambiguous_reads_++;
-                countable_reads_++;
-                barcode_counts_[bidx].countable++;
             }
         }else if((scount + acount) == 0 && ucount == 1){
-            tag.make_tag(bidx, ugidx, umi, 0, 1);
+            tag.make_tag(bidx, ugidx, umi, 0, 1, random_hex);
             unspliced_reads_++;
             //std::cout << " unspliced = " << ugidx;
             countable_reads_++;
             barcode_counts_[bidx].countable++;
+            if(random_hex) barcode_counts_[bidx].random_hex++;
+            else           barcode_counts_[bidx].poly_a++;
         }else{
             no_gene_++;
             continue;
@@ -435,6 +506,8 @@ bool BarcodeCounter::finish(){
                 << "\t" << barcode_counts_[bidx].raw_molecules 
                 << "\t" << barcode_counts_[bidx].offset 
                 << "\t" << barcode_counts_[bidx].total_data_bytes 
+                << "\t" << barcode_counts_[bidx].random_hex 
+                << "\t" << barcode_counts_[bidx].poly_a 
                 << "\n";
         }
     }

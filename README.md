@@ -170,12 +170,19 @@ scdepth cache [options] <bam> <out>
 
 ### BAM Processing
 
-| Option           | Description        | Default / Required |
-| ---------------- | ------------------ | ------------------ |
-| `-t, --threads`  | Threads            | 1                  |
-| `--max-tags`     | Max tags in memory | 200000000          |
-| `--max-tag-frac` | Max tag fraction   | 0.95               |
-| `--chunk`        | Chunk size         | 1000000            |
+| Option           | Description                                                                | Default / Required |
+| ---------------- | -------------------------------------------------------------------------- | ------------------ |
+| `-t, --threads`  | Threads                                                                    | 1                  |
+| `--max-tags`     | Max tags in memory                                                         | 200000000          |
+| `--max-tag-frac` | Max tag fraction                                                           | 0.95               |
+| `--chunk`        | Chunk size                                                                 | 1000000            |
+
+### Multiplexing Options (ie Parse WT)
+
+| Option           | Description                                                                | Default / Required |
+| ---------------- | -------------------------------------------------------------------------- | ------------------ |
+| `--samples`      | For multiplexed libraries ie parse a comma separated list of valid samples | **Optional**       |
+| `--sample-tag`   | Bam tag for sample name                                                    | **Optional**       |
 
 ### Outputs
 

@@ -30,7 +30,8 @@ struct CorrUMITag {
     static constexpr uint8_t F_UNSPLICED_OVF = 1u << 1;
     static constexpr uint8_t F_AMBIG_OVF     = 1u << 2;
     static constexpr uint8_t F_INVALID       = 1u << 3;
-    static constexpr uint8_t F_NRAW_OVF       = 1u << 4;
+    static constexpr uint8_t F_NRAW_OVF      = 1u << 4;
+    static constexpr uint8_t F_RANDOM_HEX    = 1u << 5;
 
     void inc_spliced(uint16_t v)   { inc_sat(spliced,   v, F_SPLICED_OVF); }
     void inc_unspliced(uint16_t v) { inc_sat(unspliced, v, F_UNSPLICED_OVF); }
@@ -52,7 +53,8 @@ struct CorrUMITag {
     bool spliced_overflow() const   { return (flags & F_SPLICED_OVF) != 0; }
     bool unspliced_overflow() const { return (flags & F_UNSPLICED_OVF) != 0; }
     bool ambiguous_overflow() const { return (flags & F_AMBIG_OVF) != 0; }
-    bool n_umi_overflow() const { return (flags & F_NRAW_OVF) != 0; }
+    bool n_umi_overflow() const     { return (flags & F_NRAW_OVF) != 0; }
+    bool is_random_hex() const      { return (flags & F_RANDOM_HEX) != 0; }
 
     uint32_t gene = 0;
     uint32_t umi = 0;
@@ -95,9 +97,13 @@ struct UMINode{
     uint32_t              unspliced = 0;
     uint32_t              ambiguous = 0;
     uint32_t              flags = 0;
+
+    bool is_random_hex() const      { return (flags & F_RANDOM_HEX) != 0; }
+
     uint32_t total() const {
         return spliced + unspliced + ambiguous;
     }
+    static constexpr uint8_t F_RANDOM_HEX    = 1u << 5;
     std::vector<uint16_t> edges;
 };
 
@@ -106,7 +112,7 @@ class UMIDirectional{
     public:
         void downsample(double frac, uint32_t umi_len,
                 const BarcodeCount & bc, const BarcodeData & bd, UMIResults & out,
-                bool directional, bool correct_multi_umis); //, bool profile_singles);
+                bool directional, bool correct_multi_umis, PrimerMode primer_mode); //, bool profile_singles);
 
     private:
         template <typename T>

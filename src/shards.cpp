@@ -17,15 +17,12 @@ void TagShards::collapse_(std::vector<UMITag> & counts){
     for(size_t i = 0; i < counts.size(); ){
         UMITag acc = counts[i];
         size_t j = i + 1;
-        while(j < counts.size() &&
-                counts[j].gene == acc.gene &&
-                counts[j].umi  == acc.umi)
-        {
+        while(j < counts.size() && acc.same_molecule(counts[j])){
             acc.inc_spliced(counts[j].spliced);
             acc.inc_unspliced(counts[j].unspliced);
             acc.inc_ambiguous(counts[j].ambiguous);
             acc.flags |= counts[j].flags;
-            ++j;
+            j++;
         }
         counts[out++] = acc;
         i = j;
@@ -52,6 +49,9 @@ bool TagShards::merge_(){
             merged_.back().inc_unspliced(1);
         }else{
             merged_.back().inc_ambiguous(1);
+        }
+        if(start->is_random_hex()){
+            merged_.back().set_random_hex(true);
         }
         auto it = std::next(start);
         while(it != tags_.end() && start->same_umi(*it)){

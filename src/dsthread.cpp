@@ -61,6 +61,7 @@ void DownsamplerThread::operator()(){
         //get the first barcode
         auto & bc = data_.barcodes[i];
         processed++;
+
         if(bc.countable == 0){
             if(out.build_mats){
                 for(size_t i = 0; i < data_.output.fracs.size(); i++){
@@ -108,7 +109,7 @@ void DownsamplerThread::operator()(){
         auto & o = data_.output;
         for(size_t i = 0; i < o.fracs.size(); i++){
             corrector.downsample(o.fracs[i], umi_len_, bc, b_, bco,
-                    data_.umi_directed, data_.umi_multi); //, data_.umi_singletons);
+                    data_.umi_directed, data_.umi_multi, data_.primer_mode); //, data_.umi_singletons);
 
             //o.total_singles[i] += bco.total_singles;
             //o.ed0_cross[i] += bco.ed0_cross;

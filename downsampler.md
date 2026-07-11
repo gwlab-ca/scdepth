@@ -27,6 +27,7 @@ init(
     mt_file="",
     mod_file="",
     exclude_file="",
+    barcode_prefix="",
     max_hist=50,
     build_matrices=False,
     calc_sau=False,
@@ -108,6 +109,8 @@ Clear output memory.
 | `unspliced_csr` | method | `unspliced_csr(self: scdepth.bindings._bindings.Downsampler, step: typing.SupportsInt) -> object` |
 | `ambiguous_csr` | method | `ambiguous_csr(self: scdepth.bindings._bindings.Downsampler, step: typing.SupportsInt) -> object` |
 | `aggregate_only` | property | Whether sparse matrices were built |
+| `barcode_prefix` | property | User specified primer mode |
+| `priemr_mode` | property | User specified barcode prefix |
 | `ambiguous_bc_genes` | property | Ambiguous genes per barcode shape (steps x barcodes) |
 | `ambiguous_bc_mod` | property | Ambiguous module mols per barcode shape (steps x barcodes) |
 | `ambiguous_bc_mols` | property | Ambiguous molecules per barcode shape (steps x barcodes) |

@@ -71,7 +71,7 @@ void scdepth::bind_downsampler(py::module_ &m) {
              py::arg("mt_file") = "",
              py::arg("mod_file") = "",
              py::arg("exclude_file") = "",
-
+             py::arg("barcode_prefix") = "",
              py::arg("max_hist") = 50,
              py::arg("build_matrices") = false,
              py::arg("calc_sau") = false,
@@ -99,6 +99,7 @@ void scdepth::bind_downsampler(py::module_ &m) {
              py::arg("aggregate_only") = false,
              py::arg("umi_mode") = "directed",
              py::arg("correct_multi_umis") = true,
+             py::arg("primer_mode") = "merge",
              py::call_guard<py::gil_scoped_release>{},
              "Run downsampling for the given barcodes (optional) and fractions")
 
@@ -136,6 +137,18 @@ void scdepth::bind_downsampler(py::module_ &m) {
         .def_property_readonly("total_fracs",
             [](Downsampler &self) {
                 return self.output.steps;
+            },
+            "Number of downsampling fractions")
+
+        .def_property_readonly("primer_mode",
+            [](Downsampler &self) {
+                return self.output.primer_mode;
+            },
+            "Number of downsampling fractions")
+
+        .def_property_readonly("barcode_prefix",
+            [](Downsampler &self) {
+                return self.output.barcode_prefix;
             },
             "Number of downsampling fractions")
 

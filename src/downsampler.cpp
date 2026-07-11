@@ -15,12 +15,14 @@ using namespace scdepth;
 bool Downsampler::init(const std::string & prefix, 
         const std::string & mt_prefix, const std::string & mt_file, 
         const std::string & mod_file, const std::string & exclude_file, 
+        const std::string & barcode_prefix, 
         size_t max_hist, bool build_matrices, bool calc_sau){
 
     this->prefix = prefix;
     this->build_mats_ = build_matrices;
     this->calc_sau_ = calc_sau;
     max_hist_ = max_hist;
+    this->barcode_prefix = barcode_prefix;
     barcodes = read_barcode_index(prefix + "_barcode_index.txt.gz");
     if(barcodes.empty()){
         std::cerr << "[error] barcode index is empty";
@@ -137,7 +139,8 @@ uint32_t sum_sparse(size_t row, const SparseMatrix & s){
 
 bool Downsampler::downsample(std::vector<double> & fracs, 
         uint32_t umi_len, uint64_t seed, unsigned int threads, bool aggregate_only,
-        const std::string & umi_mode, bool correct_multi_umis){
+        const std::string & umi_mode, bool correct_multi_umis,
+        const std::string & primer_mode){
         //bool profile_umi_singletons){
     chunks_.clear();
     if(fracs.empty()){
@@ -165,10 +168,23 @@ bool Downsampler::downsample(std::vector<double> & fracs,
         return false;
     }
 
+    if(primer_mode == "merge"){
+        this->primer_mode = PrimerMode::Merge;
+    }else if(primer_mode == "polyA"){
+        this->primer_mode = PrimerMode::PolyAOnly;
+    }else if(primer_mode == "random_hex"){
+        this->primer_mode = PrimerMode::RandomHexOnly;
+    }else{
+        std::cerr << "[error] invalid primer mode\n";
+        return false;
+    }
+
     clear_output();
     output.has_mt = has_mt;
     output.has_mod = has_mod;
     output.has_exc= has_exc_;
+    output.primer_mode = primer_mode;
+    output.barcode_prefix = barcode_prefix;
     has_visium = false;
     if(total_rows > 0 && total_cols > 0){
         has_visium = true;
