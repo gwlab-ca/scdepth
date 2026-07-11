@@ -490,7 +490,7 @@ bool BarcodeCounter::finish(){
 
     {
         gzofstream gzo(out_file_ + "_barcode_index.txt.gz");
-        gzo << "barcode\tbarcode_idx\ttotal_reads\tcountable_reads\traw_molecules\toffset\ttotal_bytes\n";
+        gzo << "barcode\tbarcode_idx\ttotal_reads\tcountable_reads\traw_molecules\toffset\ttotal_bytes\tcountable_random_hex\tcountable_poly_A\n";
 
         std::vector<std::string> bseqs;
         bseqs.resize(barcode_map_.size());
