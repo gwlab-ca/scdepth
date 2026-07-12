@@ -41,20 +41,17 @@ All commands share a sample prefix, for example, `your_sample/scdepth `.  This p
 
 All of these commands depend on [cache](#cache) which generates a binary encoded and bgzip compressed tag file. For documentation on the tag file format see [here](tag_format.md).
 
-### Notes for Parse WT libraries
+### Parse WT v3 support
 
-I have added support for parse WT v3 libraries. I am not sure if it will work with other parse library types at the moment.
+Experimental support has been added for Parse Biosciences WT v3 libraries. Other Parse library types have not been tested.
 
-The count command has additional arguments to support sample multiplexing and random hexamer/Poly A primers.
+The `count` command includes additional options for:
+- sample multiplexing (sample barcode prefixes)
+- poly(A)- and random-hexamer-derived molecules
 
-The emptydrops/fit/limit/preseq/genes/stability commands have two additional arguments. These are not documented for each command to avoid redundancy
+The `emptydrops` command includes a corresponding option to specify the same sample list used with `scdepth cache`.
 
-| Option           | Description                                                                | Default / Required |
-| ---------------- | -------------------------------------------------------------------------- | ------------------ |
-| `--barcode-prefix`      | Select only barcodes starting with this prefix, for parse libraries these prefixes are the samples specified with the `--samples` argument when using `scdepth cache` | **Optional** |
-| `--primer-mode`   | Use both primers (merge), poly A only (polyA), or random hexamer (random_hex)  | **Optional**       |
-
-**Important:** The `--barcode-prefix` argument will modify the output files from `<prefix>_cmd_*` to `<prefix>_<barcode_prefix>_cmd_*`
+Downstream commands currently operate on the processed molecule table and do not provide Parse-specific options for sample multiplexing or primer selection. These analyses should be performed after preprocessing the desired subset.
 
 ## API and Example Data
 
@@ -284,8 +281,8 @@ scdepth emptydrops [options] <prefix>
 
 | Option       | Description       | Default / Required |
 | ------------ | ----------------- | ------------------ |
-| `-f, --frac` | Fraction of reads | 1.0                |
 | `-F, --FDR`  | FDR cutoff        | 0.01               |
+| `--samples`      | For multiplexed libraries ie parse a comma separated list of valid samples | **Optional**       |
 
 ### Filtering Options
 

@@ -107,6 +107,7 @@ struct BarcodeCount{
     uint32_t    countable = 0;
     uint32_t    raw_molecules = 0;
     uint32_t    total_data_bytes = 0;
+    std::string sample;
     uint32_t    random_hex = 0;
     uint32_t    poly_a = 0;
     bool        has_qc = false;

@@ -117,8 +117,7 @@ def build_pilot(args, ci : int, ds : Downsampler, full_summary : SimpleNamespace
 
 
     ds.downsample(fracs, umi_len=full_summary.umi_length, 
-                seed=seed, threads=args.threads, aggregate_only=True,
-                barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+                seed=seed, threads=args.threads, aggregate_only=True)
 
     curve_stats = fn.bulk_stats(ds, full_summary)
     curve_stats.insert(loc=0, column='seed', value=seed)
@@ -221,10 +220,7 @@ def process_pilot(args, oprefix, pilot_stats, pilot_summary, pilot_meta):
 
 def build_limits(args, full_summary):
     oprefix = None
-    if args.barcode_prefix is None or args.barcode_prefix == '':
-        oprefix = f'{args.prefix}_limit'
-    else:
-        oprefix = f'{args.prefix}_{args.barcode_prefix}_limit'
+    oprefix = f'{args.prefix}_limit'
 
     keep_limits = set(map(int, args.plot_sats.split(',')))
     ldata = libraries.library2ns(args.library)
@@ -238,14 +234,13 @@ def build_limits(args, full_summary):
         print('The baseline fit does not exist please run scdepth fit first')
         return
 
-    nbl, bstats, full_stats = fit.baseline_fitter(args.prefix, barcode_prefix = args.barcode_prefix)
+    nbl, bstats, full_stats = fit.baseline_fitter(args.prefix)
 
     ds.downsample([bstats.fraction], umi_len=full_summary.umi_length, 
-            seed=args.seed, threads=args.threads, aggregate_only=True,
-            barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+            seed=args.seed, threads=args.threads, aggregate_only=True)
 
     if args.n_cells is None and args.use_scrna:
-        barcodes = fn.read_barcodes_meta(ds, args.prefix, bc_prefix=args.barcode_prefix)
+        barcodes = fn.read_barcodes_meta(ds, args.prefix)
         #df = fn.barcode_df(ds=ds, df=barcodes.copy(), step=0)
         args.n_cells = barcodes['passed'].sum()
 
@@ -277,8 +272,7 @@ def build_limits(args, full_summary):
 
     for ci, s in enumerate(seeds):
         ds.downsample(lfracs['fraction'].values, umi_len=full_summary.umi_length, 
-                    seed=s, threads=args.threads, aggregate_only=True,
-                    barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+                    seed=s, threads=args.threads, aggregate_only=True)
         curve_stats = fn.bulk_stats(ds, full_summary)
         curve_stats.insert(loc=0, column='seed', value=s)
         curve_stats.insert(loc=0, column='curve_index', value=ci)

@@ -130,12 +130,8 @@ def build_parser(parser) -> argparse.ArgumentParser:
 
 def main(parser, args):
     oprefix, prefix = None, None
-    if args.barcode_prefix is None or args.barcode_prefix == '':
-        oprefix = f'{args.prefix}_preseq'
-        prefix = args.prefix
-    else:
-        oprefix = f'{args.prefix}_{args.barcode_prefix}_preseq'
-        prefix = f'{args.prefix}_{args.barcode_prefix}'
+    oprefix = f'{args.prefix}_preseq'
+    prefix = args.prefix
     preseq = args.preseq
 
     if not os.path.isfile(preseq):

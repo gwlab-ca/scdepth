@@ -39,18 +39,14 @@ def resolve_args(args) -> dict:
 
 def build_overlaps(args, full_summary):
     oprefix, tprefix = None, None
-    if args.barcode_prefix is None or args.barcode_prefix == '':
-        oprefix = f'{args.prefix}_genes'
-        tprefix = f'{args.prefix}_genes_tmp'
-    else:
-        oprefix = f'{args.prefix}_{args.barcode_prefix}_genes'
-        tprefix = f'{args.prefix}_{args.barcode_prefix}_genes_tmp'
+    oprefix = f'{args.prefix}_genes'
+    tprefix = f'{args.prefix}_genes_tmp'
     ldata = libraries.library2ns(args.library)
     is_hd = 'visium_hd' in ldata.library
 
     ds = Downsampler()
     ds.init(args.prefix, max_hist=args.max_hist, build_matrices=True, exclude_file=args.exclude_file)
-    barcodes = fn.read_barcodes_meta(ds, args.prefix, barcode_prefix=args.barcode_prefix)
+    barcodes = fn.read_barcodes_meta(ds, args.prefix)
 
     if is_hd:
         ds.init_visium(rows=barcodes['array_row'].to_numpy(), cols=barcodes['array_col'].to_numpy(),
@@ -60,7 +56,7 @@ def build_overlaps(args, full_summary):
         args.bin_div = 0
 
 
-    nbl, bline, _ = fit.baseline_fitter(args.prefix, barcode_prefix=args.barcode_prefix)
+    nbl, bline, _ = fit.baseline_fitter(args.prefix)
 
     if args.recoveries is None:
         args.recoveries = '30,40,50,60,70'
@@ -70,8 +66,7 @@ def build_overlaps(args, full_summary):
     #saturations = sorted(set(map(int, args.saturations.split(','))))
 
     ds.downsample([1.0], umi_len=full_summary.umi_length, 
-                seed=args.seed, threads=args.threads, aggregate_only=False,
-                barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+                seed=args.seed, threads=args.threads, aggregate_only=False)
     fstats = fn.bulk_stats(ds, full_summary)
 
     if is_hd:
@@ -107,8 +102,7 @@ def build_overlaps(args, full_summary):
 
     for ci, s in enumerate(seeds):
         ds.downsample(fracs, umi_len=full_summary.umi_length,     
-                    seed=s, threads=args.threads, aggregate_only=False,
-                    barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+                    seed=s, threads=args.threads, aggregate_only=False)
 
 
         curve_stats = fn.bulk_stats(ds, full_summary)

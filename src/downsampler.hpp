@@ -14,8 +14,10 @@
 
 namespace scdepth{
 
+using gtl::flat_hash_map;
 class Downsampler{
     public:
+        using smap = flat_hash_map<std::string, uint32_t>;
         Downsampler() = default;
         Downsampler(const Downsampler&) = delete;
         Downsampler& operator=(const Downsampler&) = delete;
@@ -25,7 +27,8 @@ class Downsampler{
 
         bool init(const std::string & prefix, const std::string & mt_prefix, const std::string & mt_file, 
                 const std::string & mod_file, const std::string & exclude_file,  
-                size_t max_hist = 40, bool build_matrices = false, bool calc_sau = false);
+                size_t max_hist = 40, bool build_matrices = false, bool calc_sau = false,
+                const std::vector<uint32_t> & samples = {});
 
         bool init_visium(const std::vector<uint32_t> & rows, const std::vector<uint32_t> & cols, 
                 std::vector<uint32_t> & in_tissue, std::vector<uint32_t> & countable_reads, 
@@ -40,7 +43,7 @@ class Downsampler{
         bool downsample(std::vector<double> & fracs, 
                 uint32_t umi_len, uint64_t seed, unsigned int threads = 1, bool aggregate_only = false,
                 const std::string & umi_mode = "directed", bool correct_multi_umis = true,
-                const std::string & barcode_prefix = "", const std::string & primer_mode = "merge");
+                const std::string & primer_mode = "merge");
 
         bool write_gene_mats(const std::string & out, const std::vector<uint32_t> & idx,
                 uint32_t bin_div = 0);
@@ -55,8 +58,9 @@ class Downsampler{
         std::vector<bool>           mt_filter;
         std::vector<bool>           exclude_filter;
         std::vector<bool>           mod_filter;
+        std::vector<uint32_t>       samples;
+        size_t                      longest_sample_len = 0;
         std::string                 prefix;
-        std::string                 barcode_prefix;
         std::string                 primer_mode_str = "";
 
         uint32_t                    bin_div = 0;

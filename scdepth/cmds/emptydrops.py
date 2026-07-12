@@ -73,14 +73,15 @@ def _load_rpy2():
 
 def custom_args(parser):
     g_init = parser.add_argument_group('Parameters')
-    g_init.add_argument('-f', '--frac', type=float, default=1.0,
-                        help='Fraction of reads to use')
     g_init.add_argument('-F', '--FDR', type=float, default=0.01,
                         help='Emptydrops FDR cutoff used for significant cell filtering')
+
+    g_init.add_argument('--samples', type=str, help='For multiplexed libraries such as parse this is the same comma separated list of samples passed to `scdepth cache` for sample specific cell calling',
+                          default='')
     return parser
 
 def resolve_args(args) -> dict:
-    return {'frac':args.frac, 'FDR':args.FDR}
+    return {'FDR':args.FDR, 'samples':args.samples}
 
 def build_parser(parser) -> argparse.ArgumentParser:
     common.prepare_args(parser, use_filter=use_filter, 
@@ -203,22 +204,55 @@ def main(parser, args):
 
     ds = Downsampler()
     ds.init(args.prefix, max_hist=40, build_matrices=True) #, calc_usa=True)
-    ds.downsample([args.frac], umi_len=umi_length, seed=args.seed, threads=args.threads, aggregate_only=False,
-            barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+    ds.downsample([1.0], umi_len=umi_length, seed=args.seed, threads=args.threads, aggregate_only=False,
+            primer_mode=args.primer_mode)
 
     barcodes = np.array([b for b in ds.barcodes['barcode']])
-    #tot = ds.spliced_csr(0) + ds.unspliced_csr(0) + ds.ambiguous_csr(0)
     tot = ds.total_csr(0)
     gene_ids = gdf['gene_id'].values
 
-    total_mols = np.asarray(tot.sum(axis=1)).ravel()
-    print('Calling emptydrops')
-    cells = run_emptydrops_csr(X=tot, barcodes=barcodes, genes=gene_ids, exclude_file=args.exclude_file)
-    cells["total_mols"] = total_mols
-    cells["is_cell"] = (
-        cells["FDR"].notna()
-        & (cells["FDR"] <= args.FDR)
-    )
+    if args.samples is not None:
+        sample_cells = []
+        for s in args.samples:
+            idx = np.array([i for i, b in enumerate(barcodes) if b.startswith(f'{sample}_')])
+            if len(idx) == 0:
+                print(f'Warning: no barcodes found for {s}: {len(idx):,} barcodes')
+                continue
+            bcs = barcodes[idx]
+
+            total_mols = np.asarray(tot.sum(axis=1)).ravel()
+            stot = tot[idx]
+            print(f'Calling emptydrops for {s}')
+            cells = run_emptydrops_csr(X=stot, barcodes=bcs, genes=gene_ids, exclude_file=args.exclude_file)
+            cells["total_mols"] = total_mols[idx]
+            cells["is_cell"] = (
+                cells["FDR"].notna()
+                & (cells["FDR"] <= args.FDR)
+            )
+
+            sample_cells.append(cells)
+
+        if not sample_cells:
+            raise ValueError("No barcodes matched any values in args.samples")
+
+        # Produces one DataFrame equivalent to single-sample mode.
+        cells = pd.concat(sample_cells, axis=0, ignore_index=False)
+    else:
+        total_mols = np.asarray(tot.sum(axis=1)).ravel()
+
+        print('Calling emptydrops')
+        cells = run_emptydrops_csr(
+            X=tot,
+            barcodes=barcodes,
+            genes=gene_ids,
+            exclude_file=args.exclude_file,
+        )
+
+        cells["total_mols"] = total_mols
+        cells["is_cell"] = (
+            cells["FDR"].notna()
+            & (cells["FDR"] <= args.FDR)
+        )
 
     cells.to_csv(args.prefix + '_emptydrops_raw.txt.gz', sep='\t')
 
@@ -238,4 +272,3 @@ def main(parser, args):
         df.to_csv(args.prefix + '_emptydrops.txt.gz', sep='\t', index=False)
     else:
         df.to_csv(f'{args.prefix}_{args.barcode_prefix}_emptydrops.txt.gz', sep='\t', index=False)
-

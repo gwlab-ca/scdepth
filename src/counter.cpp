@@ -247,6 +247,7 @@ size_t BarcodeCounter::process_reads(size_t chunk){
 
         auto ptr = bam_aux_get(rec, barcode_tag_);
         char * BC = ptr == NULL ? NULL : bam_aux2Z(ptr);
+        char * sample = nullptr;
         ptr = bam_aux_get(rec, umi_tag_);
         char * UMI = ptr == NULL ? NULL : bam_aux2Z(ptr);
         if(UMI == NULL || BC == NULL){
@@ -276,7 +277,7 @@ size_t BarcodeCounter::process_reads(size_t chunk){
 
         if(!sample_set_.empty()){
             ptr = bam_aux_get(rec, sample_tag_);
-            char * sample = ptr == NULL ? NULL : bam_aux2Z(ptr);
+            sample = ptr == NULL ? NULL : bam_aux2Z(ptr);
             if(sample == NULL || sample_set_.find(sample) == sample_set_.end()){
                 full_.inc(TagSummary::BAD_TAGS, false, false);
                 continue;
@@ -323,6 +324,9 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         size_t bidx = res.first->second;
         if(barcode_counts_.size() <= bidx) barcode_counts_.resize(bidx + 1);
         barcode_counts_[bidx].total++;
+        if(sample && barcode_counts_[bidx].sample.empty()){
+            barcode_counts_[bidx].sample = sample;
+        }
 
         if(rec->core.tid < 0 || rec->core.flag & BAM_FUNMAP || rec->core.qual < min_qual_){
             full_.inc(TagSummary::LOW_QUALITY, track_primer_type, random_hex);
@@ -518,7 +522,7 @@ bool BarcodeCounter::finish(){
 
     {
         gzofstream gzo(out_file_ + "_barcode_index.txt.gz");
-        gzo << "barcode\tbarcode_idx\ttotal_reads\tcountable_reads\traw_molecules\toffset\ttotal_bytes\tcountable_random_hex\tcountable_poly_A\n";
+        gzo << "barcode\tbarcode_idx\ttotal_reads\tcountable_reads\traw_molecules\toffset\ttotal_bytes\tsample\tcountable_random_hex\tcountable_poly_A\n";
 
         std::vector<std::string> bseqs;
         bseqs.resize(barcode_map_.size());
@@ -534,6 +538,7 @@ bool BarcodeCounter::finish(){
                 << "\t" << barcode_counts_[bidx].raw_molecules 
                 << "\t" << barcode_counts_[bidx].offset 
                 << "\t" << barcode_counts_[bidx].total_data_bytes 
+                << "\t" << barcode_counts_[bidx].sample 
                 << "\t" << barcode_counts_[bidx].random_hex 
                 << "\t" << barcode_counts_[bidx].poly_a 
                 << "\n";

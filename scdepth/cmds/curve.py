@@ -47,10 +47,7 @@ def build_parser(parser):
 def build_curve(args, full_summary):
     oprefix = None
     print(args)
-    if args.barcode_prefix is None or args.barcode_prefix == '':
-        oprefix = f'{args.prefix}_fit'
-    else:
-        oprefix = f'{args.prefix}_{args.barcode_prefix}_fit'
+    oprefix = f'{args.prefix}_fit'
 
 
     ldata = libraries.library2ns(args.library)
@@ -60,12 +57,10 @@ def build_curve(args, full_summary):
             calc_sau=calc_sau)
 
     full_stats, bfrac = fit.find_target_saturation(ds, full_summary, max_sat=args.max_sat, 
-                        target_sat=args.baseline_sat, threads=args.threads, seed=args.seed,
-                        barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode)
+                        target_sat=args.baseline_sat, threads=args.threads, seed=args.seed) 
 
     ds.downsample([bfrac], umi_len=full_summary.umi_length, 
             seed=args.seed, threads=args.threads, 
-            barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode,
             aggregate_only=True)
 
     bstats = fn.bulk_stats(ds, full_summary)
@@ -96,7 +91,6 @@ def build_curve(args, full_summary):
 
 
     ds.downsample(list(full_fracs['fraction'].to_numpy(float)), umi_len=full_summary.umi_length, 
-                barcode_prefix=args.barcode_prefix, primer_mode=args.primer_mode,
                 seed=args.seed, threads=args.threads, aggregate_only=True)
 
     if calc_sau:

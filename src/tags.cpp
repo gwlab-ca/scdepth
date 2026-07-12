@@ -174,12 +174,13 @@ inline bool parse_barcode_line(const std::string& line, BarcodeCount& bc){
     bc.seed = 0;
     bc.random_hex = 0;
     bc.poly_a     = 0;
+    bc.sample.clear();
 
-    // Optional random_hex
+    // Optional only in newer files
     if(next_tok(sv, tok)){
-        if(!parse_uint<uint32_t>(tok, bc.random_hex))
+        bc.sample.assign(tok.data(), tok.size());
+        if(!next_tok(sv, tok) || !parse_uint<uint32_t>(tok, bc.random_hex))
             return false;
-
         if(!next_tok(sv, tok) || !parse_uint<uint32_t>(tok, bc.poly_a))
             return false;
     }

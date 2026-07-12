@@ -62,16 +62,17 @@ inline void sum_vectors(std::vector<T> & a, const std::vector<T> & b, bool optio
 
 struct DownsampleResultsType{
     void reset(const std::vector<double> & fracs, size_t barcodes, size_t max_hist, 
-            /*size_t genes,*/ bool alloc_barcodes, bool has_mt, bool has_exc);
+            /*size_t genes,*/ bool alloc_barcodes, bool has_mt, bool has_exc, size_t samples);
 
     void merge(const DownsampleResultsType & rhs);
 
-    std::vector<uint32_t> bc_reads;         //fracs x barcodes
-    std::vector<uint32_t> bc_mols;          //fracs x barcodes
-    std::vector<uint32_t> bc_genes;         //fracs x barcodes
-    std::vector<uint32_t> bc_mt_mols;       // convenience MT molecular counts
-    std::vector<uint32_t> bc_mod_mols;      // convenience module molecular counts
-    std::vector<uint32_t> mhist;            // reads per molecule
+    std::vector<uint32_t>              bc_reads;         //fracs x barcodes
+    std::vector<uint32_t>              bc_mols;          //fracs x barcodes
+    std::vector<uint32_t>              bc_genes;         //fracs x barcodes
+    std::vector<uint32_t>              bc_mt_mols;       // convenience MT molecular counts
+    std::vector<uint32_t>              bc_mod_mols;      // convenience module molecular counts
+    std::vector<uint32_t>              mhist;            // reads per molecule
+    std::vector<uint32_t>              sample_mhist;     // reads per molecule per sample
 
     std::vector<uint64_t> molecules;        // fracs
     std::vector<uint64_t> reads;            // fracs
@@ -81,7 +82,7 @@ struct DownsampleResultsType{
 
 struct DownsampleResultsLocal{
     void reset(const std::vector<double> & fracs, size_t barcodes, size_t genes, size_t max_hist, 
-            bool build_mats, bool has_visium, bool calc_sau, bool aggregate_only);
+            bool build_mats, bool has_visium, bool calc_sau, bool aggregate_only, size_t samples);
 
     std::vector<double>                 fracs;
     std::vector<uint64_t>               reads_discarded;
@@ -92,18 +93,22 @@ struct DownsampleResultsLocal{
     std::vector<uint64_t>               spliced_molecules;        // fracs
     std::vector<uint64_t>               spliced_reads;            // fracs
     std::vector<uint32_t>               spliced_mhist;            // reads per molecule
+    std::vector<uint32_t>               spliced_sample_mhist;
  
     std::vector<uint64_t>               unspliced_molecules;      // fracs
     std::vector<uint64_t>               unspliced_reads;          // fracs
     std::vector<uint32_t>               unspliced_mhist;          // reads per molecule
+    std::vector<uint32_t>               unspliced_sample_mhist;
  
     std::vector<uint64_t>               ambiguous_molecules;      // fracs
     std::vector<uint64_t>               ambiguous_reads;          // fracs
     std::vector<uint32_t>               ambiguous_mhist;          // reads per molecule
+    std::vector<uint32_t>               ambiguous_sample_mhist;
  
     std::vector<uint64_t>               total_molecules;          // fracs
     std::vector<uint64_t>               total_reads;              // fracs
     std::vector<uint32_t>               total_mhist;              // reads per molecule
+    std::vector<uint32_t>               total_sample_mhist;
 
     std::vector<SparseMatrix>           total_mat;
     std::vector<SparseMatrix>           spliced_mat;
@@ -113,6 +118,7 @@ struct DownsampleResultsLocal{
     size_t                              steps = 0;
     size_t                              barcodes = 0;
     size_t                              genes = 0;
+    size_t                              samples = 0;
     uint32_t                            max_hist = 0;
     bool                                build_mats = false;
     bool                                has_visium = false;
@@ -124,7 +130,7 @@ struct DownsampleResultsLocal{
 
 struct DownsampleResults{
     void reset(const std::vector<double> & fracs, size_t barcodes, size_t genes, size_t max_hist, 
-            bool build_mats, bool calc_sau, bool alloc_barcodes, bool has_visium);
+            bool build_mats, bool calc_sau, bool alloc_barcodes, bool has_visium, size_t samples);
 
     void merge(const DownsampleResultsLocal & rhs);
 
@@ -158,7 +164,6 @@ struct DownsampleResults{
 
     std::vector<GeneCountMatrix>        gcounts;
     std::string                         primer_mode;
-    std::string                         barcode_prefix;
 
     //std::vector<uint32_t>               cell_mhist;
 
@@ -176,6 +181,7 @@ struct DownsampleResults{
     size_t                              steps = 0;
     size_t                              barcodes = 0;
     size_t                              genes = 0;
+    size_t                              samples = 0;
     uint64_t                            seed = 0;
     uint32_t                            max_hist = 0;
     bool                                build_mats = false;

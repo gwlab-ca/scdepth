@@ -2,10 +2,6 @@
 // Copyright (c) Gavin W. Wilson
 
 #include "dsdata.hpp"
-#include "dsmisc.hpp"
-#include "downsampler.hpp"
-#include "htslib/bgzf.h"
-#include <iostream>
 
 using namespace scdepth;
 
@@ -78,9 +74,10 @@ void GeneCountMatrix::merge(const GeneCountMatrix & rhs){
 }
 
 void DownsampleResultsType::reset(const std::vector<double> & fracs, size_t barcodes, size_t max_hist, 
-        /*size_t genes,*/ bool alloc_barcodes, bool has_mt, bool has_mod)
+        /*size_t genes,*/ bool alloc_barcodes, bool has_mt, bool has_mod, size_t samples)
 {
     mhist.assign(fracs.size() * max_hist, 0);
+    sample_mhist.assign(fracs.size() * max_hist * samples, 0);
     reads.assign(fracs.size(), 0);
     molecules.assign(fracs.size(), 0);
 
@@ -106,19 +103,21 @@ void DownsampleResultsType::reset(const std::vector<double> & fracs, size_t barc
 
 void DownsampleResultsType::merge(const DownsampleResultsType & rhs){
     sum_vectors(mhist, rhs.mhist, false);
+    sum_vectors(sample_mhist, rhs.sample_mhist, false);
     sum_vectors(reads, rhs.reads, false);
     sum_vectors(molecules, rhs.molecules, false);
 }
 
 
 void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t barcodes, size_t genes, size_t max_hist, 
-        bool build_mats, bool has_visium, bool calc_sau, bool aggregate_only){
+        bool build_mats, bool has_visium, bool calc_sau, bool aggregate_only, size_t samples){
 
     this->fracs = fracs;
     this->steps = fracs.size();
     this->barcodes = barcodes;
     this->max_hist = max_hist;
     this->genes = genes;
+    this->samples = samples;
 
     reads_discarded.resize(fracs.size());
     reads_excluded.resize(fracs.size());
@@ -135,6 +134,10 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     spliced_mhist.resize(fracs.size() * max_hist);
     unspliced_mhist.resize(fracs.size() * max_hist);
     ambiguous_mhist.resize(fracs.size() * max_hist);
+
+    spliced_sample_mhist.resize(fracs.size() * max_hist * samples);
+    unspliced_sample_mhist.resize(fracs.size() * max_hist * samples);
+    ambiguous_sample_mhist.resize(fracs.size() * max_hist * samples);
 
     total_reads.resize(fracs.size());
     total_molecules.resize(fracs.size());
@@ -166,7 +169,7 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
 }
 
 void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes, size_t genes, size_t max_hist, 
-        bool build_mats, bool calc_sau, bool alloc_barcodes, bool has_visium){
+        bool build_mats, bool calc_sau, bool alloc_barcodes, bool has_visium, size_t samples){
 
     this->fracs = fracs;
     this->steps = fracs.size();
@@ -197,11 +200,11 @@ void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes
         //cell_mhist.resize(0);
     }
 
-    spliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc);
-    ambiguous.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc);
-    unspliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc);
+    spliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc, samples);
+    ambiguous.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc, samples);
+    unspliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc, samples);
 
-    total.reset(fracs, barcodes, max_hist, alloc_barcodes, has_mt, has_exc);
+    total.reset(fracs, barcodes, max_hist, alloc_barcodes, has_mt, has_exc, samples);
     this->calc_sau = calc_sau;
     this->build_mats = build_mats;
     this->has_visium = has_visium;
@@ -248,6 +251,11 @@ void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
     sum_vectors(reads_discarded, rhs.reads_discarded, false);
     sum_vectors(reads_excluded, rhs.reads_excluded, false);
     sum_vectors(mols_discarded, rhs.mols_discarded, false);
+
+    sum_vectors(spliced.sample_mhist, rhs.spliced_sample_mhist, false);
+    sum_vectors(unspliced.sample_mhist, rhs.unspliced_sample_mhist, false);
+    sum_vectors(total.sample_mhist, rhs.total_sample_mhist, false);
+    sum_vectors(ambiguous.sample_mhist, rhs.ambiguous_sample_mhist, false);
 
     if(build_mats){
         if(calc_sau){
