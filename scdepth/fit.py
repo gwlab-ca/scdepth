@@ -296,11 +296,17 @@ def saturation_fracs(fit : NBLibFit, full_summary : SimpleNamespace, sats, full 
 
 def find_target_saturation(ds: Downsampler, full_summary: SimpleNamespace, 
                            target_sat: float = 50.0, max_sat : float = 55, 
-                           seed: int = 42, threads: int = 1) -> tuple[pd.DataFrame, float]:
+                           seed: int = 42, threads: int = 1,
+                           barcode_prefix : str = "", primer_mode : str = "merge") -> tuple[pd.DataFrame, float]:
 
     ds.downsample([1.0], umi_len=full_summary.umi_length, 
-            seed=seed, threads=threads, aggregate_only=True)
+            seed=seed, threads=threads, aggregate_only=True,
+            barcode_prefix=barcode_prefix, primer_mode=primer_mode)
     full_stats = fn.bulk_stats(ds, full_summary)
+    pd.set_option('display.float_format', '{:.2f}'.format)
+    pd.set_option("styler.format.thousands", ",")
+    print(full_stats.T)
+    print(full_summary)
     ss = full_stats.iloc[0]
     if ss.saturation < max_sat:
         return full_stats, 1.0
@@ -308,9 +314,11 @@ def find_target_saturation(ds: Downsampler, full_summary: SimpleNamespace,
     nbl.fit(fn.get_rpm_hist(ds=ds)[0], reads=ss.reads, molecules=ss.molecules)
     frac = nbl.reads_for_saturation(target_sat) / full_summary.countable_reads
     ds.downsample([frac], umi_len=full_summary.umi_length, seed=seed, 
-                  threads=threads, aggregate_only=True)
+                  threads=threads, aggregate_only=True,
+                  barcode_prefix=barcode_prefix, primer_mode=primer_mode)
 
     df = fn.bulk_stats(ds, full_summary)
+    print(df.T)
     b = df.iloc[0]
     nbl = NBLibFit()
     nbl.fit(fn.get_rpm_hist(ds=ds)[0], reads=b.reads, molecules=b.molecules)

@@ -130,8 +130,9 @@ bool BarcodeCounter::prepare_bam(const std::string & gtf, const std::string & in
     bam_file_ = in;
     out_file_ = out;
     barcode_counts_.clear();
-    total_reads_ = 0;
-    countable_reads_ = 0;
+    full_ = TagSummary();
+    ssum_.clear();
+    samples_.clear();
     shards_.reset();
     std::cout.imbue(std::locale(""));
     return true;
@@ -231,6 +232,7 @@ size_t BarcodeCounter::process_reads(size_t chunk){
     //std::vector<Exon> tmp;
     while(processed < chunk){
         auto ret = sam_read1(bf_, bh_, rec);
+        TagSummary * samp_sum = nullptr;
         if(ret < -1){
             std::cerr << "[error] Error processing the sam/bam/cram file\n";
             done_ = true;
@@ -240,14 +242,14 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             break;
         }
         processed++;
-        total_reads_++;
+        full_.total_reads++;
 
         auto ptr = bam_aux_get(rec, barcode_tag_);
         char * BC = ptr == NULL ? NULL : bam_aux2Z(ptr);
         ptr = bam_aux_get(rec, umi_tag_);
         char * UMI = ptr == NULL ? NULL : bam_aux2Z(ptr);
         if(UMI == NULL || BC == NULL){
-            bad_tags_++;
+            full_.bad_tags++;
             continue;
         }
 
@@ -259,14 +261,14 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             umi_length_ = umi_len;
         }
         if((barcode_length_ != 0 && cb_len != barcode_length_) || umi_len != umi_length_){
-            bad_tags_++;
+            full_.bad_tags++;
             //std::cout << "bad tag length cb = " << cb_len << " vs " << barcode_length_ 
             //    << " umi = " << umi_len << " vs " << umi_length_ << "\n";
             continue;
         }
 
         if(!std::regex_match(BC, barcode_re_)){
-            bad_tags_++;
+            full_.bad_tags++;
             //std::cout << "bad CB RE match CB = " << BC << "\n";
             continue;
         }
@@ -275,12 +277,15 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             ptr = bam_aux_get(rec, sample_tag_);
             char * sample = ptr == NULL ? NULL : bam_aux2Z(ptr);
             if(sample == NULL || sample_set_.find(sample) == sample_set_.end()){
-                bad_tags_++;
+                full_.bad_tags++;
                 continue;
             }
             barcode.assign(sample, strlen(sample));
             barcode += '_';
             barcode.append(BC, BC + strlen(BC));
+            samp_sum = &ssum_[sample];
+            samp_sum->total_reads++;
+
         }else{
             barcode.assign(BC, BC + strlen(BC));
         }
@@ -290,7 +295,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         std::tie(umi, umi_okay) = seq2int(UMI, umi_length_);
         if(!umi_okay){
             //std::cout << "bad UMI UMI = " << UMI << "\n";
-            bad_tags_++;
+            full_.bad_tags++;
+            if(samp_sum) samp_sum->bad_tags++;
             continue;
         }
 
@@ -300,7 +306,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         barcode_counts_[bidx].total++;
 
         if(rec->core.tid < 0 || rec->core.flag & BAM_FUNMAP || rec->core.qual < min_qual_){
-            low_quality_++;
+            full_.low_quality++;
+            if(samp_sum != nullptr) samp_sum->low_quality++;
             continue;
         }
         auto ref = gtrees_[rec->core.tid]; 
@@ -319,7 +326,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
                 hex_error
             );
             if(hex_error){
-                bad_tags_++;
+                full_.bad_tags++;
+                if(samp_sum != nullptr) samp_sum->bad_tags++;
                 continue;
             }
         }
@@ -330,21 +338,27 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             uint32_t gidx = 0;
             //std::cout << "check GX = " << GX << "\n";
             if(GX == NULL || strchr(GX, ';') != NULL){
-                no_gene_++;
+                full_.no_gene++;
+                if(samp_sum != nullptr) samp_sum->no_gene++;
                 continue;
             }else{
                 auto git = gene_map_.find(GX);
                 if(git != gene_map_.end()){
                     gidx = git->second;
                 }else{
-                    no_gene_++;
+                    full_.no_gene++;
+                    if(samp_sum != nullptr) samp_sum->no_gene++;
                     continue;
                 }
             }
             RawTag tag;
             tag.make_tag(bidx, gidx, umi, 0, 0, random_hex);
-            ambiguous_reads_++;
-            countable_reads_++;
+            full_.ambiguous_reads++;
+            full_.countable_reads++;
+            if(samp_sum != nullptr) {
+                samp_sum->countable_reads++;
+                samp_sum->ambiguous_reads++;
+            }
             barcode_counts_[bidx].countable++;
             if(random_hex) barcode_counts_[bidx].random_hex++;
             else           barcode_counts_[bidx].poly_a++;
@@ -353,7 +367,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         }
 
         if(!ref.overlap(lft, rgt, overlaps)) {
-            no_gene_++;
+            full_.no_gene++;
+            if(samp_sum != nullptr) samp_sum->no_gene++;
             continue;
         }
         //std::cout << "check overlaps\n";
@@ -443,26 +458,34 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             if(random_hex) barcode_counts_[bidx].random_hex++;
             else           barcode_counts_[bidx].poly_a++;
             barcode_counts_[bidx].countable++;
-            countable_reads_++;
+            full_.countable_reads++;
+            if(samp_sum != nullptr) samp_sum->countable_reads++;
             if(scount == 1){
                 tag.make_tag(bidx, sgidx, umi, 1, 0, random_hex);
                 //std::cout << " spliced = " << sgidx;
-                spliced_reads_++;
+                full_.spliced_reads++;
+                if(samp_sum != nullptr) samp_sum->spliced_reads++;
             }else{
                 tag.make_tag(bidx, agidx, umi, 0, 0, random_hex);
                 //std::cout << " ambiguous = " << agidx;
-                ambiguous_reads_++;
+                full_.ambiguous_reads++;
+                if(samp_sum != nullptr) samp_sum->ambiguous_reads++;
             }
         }else if((scount + acount) == 0 && ucount == 1){
             tag.make_tag(bidx, ugidx, umi, 0, 1, random_hex);
-            unspliced_reads_++;
+            full_.unspliced_reads++;
             //std::cout << " unspliced = " << ugidx;
-            countable_reads_++;
+            full_.countable_reads++;
+            if(samp_sum != nullptr) {
+                samp_sum->countable_reads++;
+                samp_sum->unspliced_reads++;
+            }
             barcode_counts_[bidx].countable++;
             if(random_hex) barcode_counts_[bidx].random_hex++;
             else           barcode_counts_[bidx].poly_a++;
         }else{
-            no_gene_++;
+            full_.no_gene++;
+            if(samp_sum != nullptr) samp_sum->no_gene++;
             continue;
         }
 
@@ -516,14 +539,14 @@ bool BarcodeCounter::finish(){
     {
         std::ofstream os(out_file_ + "_summary.txt");
         os << "key\ttype\tvalue\n";
-        os << "total_reads\treads\t" <<  total_reads_ << "\n";
-        os << "spliced_reads\treads\t" <<  spliced_reads_ << "\n";
-        os << "ambiguous_reads\treads\t" <<  ambiguous_reads_ << "\n";
-        os << "unspliced_reads\treads\t" <<  unspliced_reads_ << "\n";
-        os << "countable_reads\treads\t" <<  countable_reads_ << "\n";
-        os << "low_quality_reads\treads\t" <<  low_quality_ << "\n";
-        os << "bad_tag_reads\treads\t" <<  bad_tags_ << "\n";
-        os << "no_gene_reads\treads\t" <<  no_gene_ << "\n";
+        os << "total_reads\treads\t" <<  full_.total_reads << "\n";
+        os << "spliced_reads\treads\t" <<  full_.spliced_reads << "\n";
+        os << "ambiguous_reads\treads\t" <<  full_.ambiguous_reads << "\n";
+        os << "unspliced_reads\treads\t" <<  full_.unspliced_reads << "\n";
+        os << "countable_reads\treads\t" <<  full_.countable_reads << "\n";
+        os << "low_quality_reads\treads\t" <<  full_.low_quality << "\n";
+        os << "bad_tag_reads\treads\t" <<  full_.bad_tags << "\n";
+        os << "no_gene_reads\treads\t" <<  full_.no_gene << "\n";
         os << "raw_molecules\treads\t" <<  shards_.raw_molecules() << "\n";
         os << "bam\tparam\t" << bam_file_ << "\n";
         os << "min_gene\tparam\t" << std::fixed << std::setprecision(4) << min_gene_ << "\n";
@@ -541,6 +564,37 @@ bool BarcodeCounter::finish(){
         os << "strand_mode\tlibrary\t" << (strand_ == StrandMode::TAG_FWD ? "fwd" : "rev") << "\n";
         os << "barcodes_detected\tlibrary\t" << barcode_counts_.size() << "\n";
     }
+
+    for(auto & p : ssum_){
+        std::ofstream os(out_file_ + "_" + p.first + "_summary.txt");
+        const TagSummary & ssum = p.second;
+        os << "key\ttype\tvalue\n";
+        os << "sample\tmultiplex\t" <<  p.first << "\n";
+        os << "total_reads\treads\t" <<  ssum.total_reads << "\n";
+        os << "spliced_reads\treads\t" <<  ssum.spliced_reads << "\n";
+        os << "ambiguous_reads\treads\t" <<  ssum.ambiguous_reads << "\n";
+        os << "unspliced_reads\treads\t" <<  ssum.unspliced_reads << "\n";
+        os << "countable_reads\treads\t" <<  ssum.countable_reads << "\n";
+        os << "low_quality_reads\treads\t" <<  ssum.low_quality << "\n";
+        os << "bad_tag_reads\treads\t" <<  ssum.bad_tags << "\n";
+        os << "no_gene_reads\treads\t" <<  ssum.no_gene << "\n";
+        os << "bam\tparam\t" << bam_file_ << "\n";
+        os << "min_gene\tparam\t" << std::fixed << std::setprecision(4) << min_gene_ << "\n";
+        os << "min_exonic\tparam\t" << std::fixed << std::setprecision(4) << min_exonic_ << "\n";
+        os << "min_gene_bases\tparam\t" << min_gene_bases_ << "\n";
+        os << "min_intronic\tparam\t" << min_intronic_ << "\n";
+        os << "min_qual\tparam\t" << static_cast<int>(min_qual_) << "\n";
+        os << "discard_unknown_juncs\tparam\t" << static_cast<int>(discard_unknown_juncs_) << "\n";
+        os << "library_string\tlibrary\t" << lib_string_ << "\n";
+        os << "barcode_tag\tlibrary\t" << barcode_tag_[0] << barcode_tag_[1] << "\n";
+        os << "barcode_length\tlibrary\t" << barcode_length_ << "\n";
+        os << "barcode_regex\tlibrary\t" << barcode_regex_str_ << "\n";
+        os << "umi_tag\tlibrary\t" << umi_tag_[0] << umi_tag_[1] << "\n";
+        os << "umi_length\tlibrary\t" << umi_length_ << "\n";
+        os << "strand_mode\tlibrary\t" << (strand_ == StrandMode::TAG_FWD ? "fwd" : "rev") << "\n";
+        os << "barcodes_detected\tlibrary\t" << barcode_counts_.size() << "\n";
+    }
+
     gtf2mapping(genes_, out_file_ + "_genes.txt.gz");
 
     return true;

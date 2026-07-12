@@ -16,10 +16,22 @@ namespace scdepth{
 using gtl::flat_hash_map;
 using gtl::flat_hash_set;
 
+struct TagSummary{
+    uint64_t                     low_quality = 0;
+    uint64_t                     bad_tags = 0;
+    uint64_t                     no_gene = 0;
+    uint64_t                     countable_reads = 0;
+    uint64_t                     total_reads = 0;
+    uint64_t                     spliced_reads = 0;
+    uint64_t                     ambiguous_reads = 0;
+    uint64_t                     unspliced_reads = 0;
+};
+
 class BarcodeCounter{
     public:
         using hmap = flat_hash_map<std::string, uint32_t>;
         using smap = flat_hash_set<std::string>;
+        using tsmap = flat_hash_map<std::string, TagSummary>;
         ~BarcodeCounter(){
             if(bh_ != nullptr){
                 sam_hdr_destroy(bh_);
@@ -51,11 +63,11 @@ class BarcodeCounter{
         }
 
         size_t total_reads() const {
-            return total_reads_;
+            return full_.total_reads;
         }
 
         size_t countable_reads() const {
-            return countable_reads_;
+            return full_.countable_reads;
         }
 
         bool finish();
@@ -83,6 +95,8 @@ class BarcodeCounter{
         std::string                  barcode_regex_str_;
         std::string                  random_hex_regex_str_;
         std::string                  random_hex_value_;
+        TagSummary                   full_;
+        tsmap                        ssum_;
 
         std::vector<std::string>     samples_;
         smap                         sample_set_;
@@ -91,14 +105,6 @@ class BarcodeCounter{
         char                         sample_tag_[2];
         samFile                    * bf_ = nullptr;
         sam_hdr_t                  * bh_ = nullptr;
-        uint64_t                     low_quality_ = 0;
-        uint64_t                     bad_tags_ = 0;
-        uint64_t                     no_gene_ = 0;
-        uint64_t                     countable_reads_ = 0;
-        uint64_t                     total_reads_ = 0;
-        uint64_t                     spliced_reads_ = 0;
-        uint64_t                     ambiguous_reads_ = 0;
-        uint64_t                     unspliced_reads_ = 0;
         double                       min_gene_ = 0.95;
         double                       min_exonic_ = 0.95;
         unsigned int                 min_gene_bases_ = 40;

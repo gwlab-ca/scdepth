@@ -223,7 +223,7 @@ def prepare_args(parser: argparse.ArgumentParser, use_exc_genes : bool, use_filt
     g_common.add_argument('--barcode-prefix', type=str, help='Only process scRNA library barcodes starting with this prefix, '
                           'useful to filter specific samples from multiplexed libraries such as Parse WT data',
                           default='')
-    g_common.add_argument('--primer-type', type=str, help='For scRNA libaries such as Parse WT this permits selecting a primer type or merging both: '
+    g_common.add_argument('--primer-mode', type=str, help='For scRNA libaries such as Parse WT this permits selecting a primer type or merging both: '
                           'options are merge/polyA/random_hex', choices=['merge','polyA','random_hex'], default='merge')
     g_common.add_argument('-S', '--seed', type=int, default=42,
                         help='Seed used for downsampling')
@@ -249,6 +249,8 @@ def resolve_args(parser, args, use_exc_genes : bool, use_filter : bool,
         'threads':args.threads,
         'max_hist':args.max_hist,
         'seed':args.seed,
+        'barcode_prefix':args.barcode_prefix,
+        'primer_mode':args.primer_mode,
     }
     summary = fn.parse_summary(args.prefix)
     if args.custom_libs:

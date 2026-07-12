@@ -52,7 +52,7 @@ The emptydrops/fit/limit/preseq/genes/stability commands have two additional arg
 | Option           | Description                                                                | Default / Required |
 | ---------------- | -------------------------------------------------------------------------- | ------------------ |
 | `--barcode-prefix`      | Select only barcodes starting with this prefix, for parse libraries these prefixes are the samples specified with the `--samples` argument when using `scdepth cache` | **Optional** |
-| `--primer-type`   | Use both primers (merge), poly A only (polyA), or random hexamer (random_hex)  | **Optional**       |
+| `--primer-mode`   | Use both primers (merge), poly A only (polyA), or random hexamer (random_hex)  | **Optional**       |
 
 **Important:** The `--barcode-prefix` argument will modify the output files from `<prefix>_cmd_*` to `<prefix>_<barcode_prefix>_cmd_*`
 
