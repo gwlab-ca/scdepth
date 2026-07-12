@@ -229,7 +229,7 @@ size_t BarcodeCounter::process_reads(size_t chunk){
     std::string barcode;
     uint32_t umi = 0;
     bool umi_okay = false;
-    bool has_random_hex = !random_hex_regex_str_.empty();
+    bool track_primer_type = !random_hex_regex_str_.empty();
     //std::vector<Exon> tmp;
     while(processed < chunk){
         auto ret = sam_read1(bf_, bh_, rec);
@@ -292,7 +292,7 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         }
 
 
-        if(has_random_hex){
+        if(track_primer_type){
             bool hex_error = false;
             random_hex = extract_flag_from_qname(
                 bam_get_qname(rec),
@@ -314,8 +314,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         std::tie(umi, umi_okay) = seq2int(UMI, umi_length_);
         if(!umi_okay){
             //std::cout << "bad UMI UMI = " << UMI << "\n";
-            full_.inc(TagSummary::BAD_TAGS, has_random_hex, random_hex);
-            if(samp_sum) samp_sum->inc(TagSummary::BAD_TAGS, has_random_hex, random_hex);
+            full_.inc(TagSummary::BAD_TAGS, track_primer_type, random_hex);
+            if(samp_sum) samp_sum->inc(TagSummary::BAD_TAGS, track_primer_type, random_hex);
             continue;
         }
 
@@ -325,8 +325,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         barcode_counts_[bidx].total++;
 
         if(rec->core.tid < 0 || rec->core.flag & BAM_FUNMAP || rec->core.qual < min_qual_){
-            full_.inc(TagSummary::LOW_QUALITY, has_random_hex, random_hex);
-            if(samp_sum) samp_sum->inc(TagSummary::LOW_QUALITY, has_random_hex, random_hex);
+            full_.inc(TagSummary::LOW_QUALITY, track_primer_type, random_hex);
+            if(samp_sum) samp_sum->inc(TagSummary::LOW_QUALITY, track_primer_type, random_hex);
             continue;
         }
         auto ref = gtrees_[rec->core.tid]; 
@@ -342,26 +342,26 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             uint32_t gidx = 0;
             //std::cout << "check GX = " << GX << "\n";
             if(GX == NULL || strchr(GX, ';') != NULL){
-                full_.inc(TagSummary::NO_GENE, has_random_hex, random_hex);
-                if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, has_random_hex, random_hex);
+                full_.inc(TagSummary::NO_GENE, track_primer_type, random_hex);
+                if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, track_primer_type, random_hex);
                 continue;
             }else{
                 auto git = gene_map_.find(GX);
                 if(git != gene_map_.end()){
                     gidx = git->second;
                 }else{
-                    full_.inc(TagSummary::NO_GENE, has_random_hex, random_hex);
-                    if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, has_random_hex, random_hex);
+                    full_.inc(TagSummary::NO_GENE, track_primer_type, random_hex);
+                    if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, track_primer_type, random_hex);
                     continue;
                 }
             }
             RawTag tag;
             tag.make_tag(bidx, gidx, umi, 0, 0, random_hex);
-            full_.inc(TagSummary::AMBIGUOUS_READS, has_random_hex, random_hex);
-            full_.inc(TagSummary::COUNTABLE_READS, has_random_hex, random_hex);
+            full_.inc(TagSummary::AMBIGUOUS_READS, track_primer_type, random_hex);
+            full_.inc(TagSummary::COUNTABLE_READS, track_primer_type, random_hex);
             if(samp_sum) {
-                samp_sum->inc(TagSummary::COUNTABLE_READS, has_random_hex, random_hex);
-                samp_sum->inc(TagSummary::AMBIGUOUS_READS, has_random_hex, random_hex);
+                samp_sum->inc(TagSummary::COUNTABLE_READS, track_primer_type, random_hex);
+                samp_sum->inc(TagSummary::AMBIGUOUS_READS, track_primer_type, random_hex);
             }
             barcode_counts_[bidx].countable++;
             if(random_hex) barcode_counts_[bidx].random_hex++;
@@ -371,8 +371,8 @@ size_t BarcodeCounter::process_reads(size_t chunk){
         }
 
         if(!ref.overlap(lft, rgt, overlaps)) {
-            full_.inc(TagSummary::NO_GENE, has_random_hex, random_hex);
-            if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, has_random_hex, random_hex);
+            full_.inc(TagSummary::NO_GENE, track_primer_type, random_hex);
+            if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, track_primer_type, random_hex);
             continue;
         }
         //std::cout << "check overlaps\n";
@@ -462,34 +462,34 @@ size_t BarcodeCounter::process_reads(size_t chunk){
             if(random_hex) barcode_counts_[bidx].random_hex++;
             else           barcode_counts_[bidx].poly_a++;
             barcode_counts_[bidx].countable++;
-            full_.inc(TagSummary::COUNTABLE_READS, has_random_hex, random_hex);
-            if(samp_sum) samp_sum->inc(TagSummary::COUNTABLE_READS, has_random_hex, random_hex);
+            full_.inc(TagSummary::COUNTABLE_READS, track_primer_type, random_hex);
+            if(samp_sum) samp_sum->inc(TagSummary::COUNTABLE_READS, track_primer_type, random_hex);
             if(scount == 1){
                 tag.make_tag(bidx, sgidx, umi, 1, 0, random_hex);
                 //std::cout << " spliced = " << sgidx;
-                full_.inc(TagSummary::SPLICED_READS, has_random_hex, random_hex);
-                if(samp_sum) samp_sum->inc(TagSummary::SPLICED_READS, has_random_hex, random_hex);
+                full_.inc(TagSummary::SPLICED_READS, track_primer_type, random_hex);
+                if(samp_sum) samp_sum->inc(TagSummary::SPLICED_READS, track_primer_type, random_hex);
             }else{
                 tag.make_tag(bidx, agidx, umi, 0, 0, random_hex);
                 //std::cout << " ambiguous = " << agidx;
-                full_.inc(TagSummary::AMBIGUOUS_READS, has_random_hex, random_hex);
-                if(samp_sum) samp_sum->inc(TagSummary::AMBIGUOUS_READS, has_random_hex, random_hex);
+                full_.inc(TagSummary::AMBIGUOUS_READS, track_primer_type, random_hex);
+                if(samp_sum) samp_sum->inc(TagSummary::AMBIGUOUS_READS, track_primer_type, random_hex);
             }
         }else if((scount + acount) == 0 && ucount == 1){
             tag.make_tag(bidx, ugidx, umi, 0, 1, random_hex);
-            full_.inc(TagSummary::UNSPLICED_READS, has_random_hex, random_hex);
+            full_.inc(TagSummary::UNSPLICED_READS, track_primer_type, random_hex);
             //std::cout << " unspliced = " << ugidx;
-            full_.inc(TagSummary::COUNTABLE_READS, has_random_hex, random_hex);
+            full_.inc(TagSummary::COUNTABLE_READS, track_primer_type, random_hex);
             if(samp_sum) {
-                samp_sum->inc(TagSummary::COUNTABLE_READS, has_random_hex, random_hex);
-                samp_sum->inc(TagSummary::UNSPLICED_READS, has_random_hex, random_hex);
+                samp_sum->inc(TagSummary::COUNTABLE_READS, track_primer_type, random_hex);
+                samp_sum->inc(TagSummary::UNSPLICED_READS, track_primer_type, random_hex);
             }
             barcode_counts_[bidx].countable++;
             if(random_hex) barcode_counts_[bidx].random_hex++;
             else           barcode_counts_[bidx].poly_a++;
         }else{
-            full_.inc(TagSummary::NO_GENE, has_random_hex, random_hex);
-            if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, has_random_hex, random_hex);
+            full_.inc(TagSummary::NO_GENE, track_primer_type, random_hex);
+            if(samp_sum) samp_sum->inc(TagSummary::NO_GENE, track_primer_type, random_hex);
             continue;
         }
 
@@ -572,21 +572,21 @@ bool BarcodeCounter::finish(){
         os << "barcodes_detected\tlibrary\t" << barcode_counts_.size() << "\n";
     }
 
-    for(auto & p : ssum_){
-        std::ofstream os(out_file_ + "_" + p.first + "_summary.txt");
-        const TagCounter & ssum = p.second;
+    if(!samples_.empty()){
+        std::ofstream os(out_file_ + "_sample_summary.txt");
         os << "key\ttype\tvalue\n";
-        os << "sample\tmultiplex\t" <<  p.first << "\n";
-        os << "key\ttype\tvalue\n";
-        for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
-            os << TagNames[i] << "\treads\t" << ssum.merged_counts[i] << "\n";
-        }
-        if(!random_hex_regex_str_.empty()){
+        for(auto & p : ssum_){
+            const TagCounter & ssum = p.second;
             for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
-                os << "polyA_" << TagNames[i] << "\treads\t" << ssum.polyA_counts[i] << "\n";
+                os << p.first << "_" << TagNames[i] << "\treads\t" << ssum.merged_counts[i] << "\n";
             }
-            for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
-                os << "random_hex_" << TagNames[i] << "\treads\t" << ssum.random_hex_counts[i] << "\n";
+            if(!random_hex_regex_str_.empty()){
+                for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
+                    os << p.first << "_" << "polyA_" << TagNames[i] << "\treads\t" << ssum.polyA_counts[i] << "\n";
+                }
+                for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
+                    os << p.first << "_" << "random_hex_" << TagNames[i] << "\treads\t" << ssum.random_hex_counts[i] << "\n";
+                }
             }
         }
     }
