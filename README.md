@@ -205,6 +205,7 @@ scdepth cache [options] <bam> <out>
 | ----------- | ----------- |
 | `<prefix>_barcode_index.txt.gz` | The list of all the barcodes and their tag file offsets |
 | `<prefix>_summary.txt` | Basic summary of the bam file including read counts, unmapped reads, library information |
+| `<prefix>_sample_summary.txt` | Basic summary of each sample in the bam file including read counts, unmapped reads, library information (Only emitted when --samples are specified)|
 | `<prefix>_genes.txt.gz` | Gene ID mapping file extracted from the gtf. This is primarily used for matrix generation and is generated for portability |
 | `<prefix>_tags.gz` | Binary encoded and bgzip compressed tag file |
 
