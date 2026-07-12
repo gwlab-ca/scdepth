@@ -259,7 +259,7 @@ scdepth probes -p <probe> <prefix>
 
 ## emptydrops
 
-Run EmptyDrops cell-calling.
+Run EmptyDrops cell-calling. If there are multiplexed samples this will process each sample independently and merge the results
 
 ### Usage
 
@@ -282,7 +282,6 @@ scdepth emptydrops [options] <prefix>
 | Option       | Description       | Default / Required |
 | ------------ | ----------------- | ------------------ |
 | `-F, --FDR`  | FDR cutoff        | 0.01               |
-| `--samples`      | For multiplexed libraries ie parse a comma separated list of valid samples | **Optional**       |
 
 ### Filtering Options
 

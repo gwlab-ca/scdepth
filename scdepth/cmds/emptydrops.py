@@ -75,13 +75,10 @@ def custom_args(parser):
     g_init = parser.add_argument_group('Parameters')
     g_init.add_argument('-F', '--FDR', type=float, default=0.01,
                         help='Emptydrops FDR cutoff used for significant cell filtering')
-
-    g_init.add_argument('--samples', type=str, help='For multiplexed libraries such as parse this is the same comma separated list of samples passed to `scdepth cache` for sample specific cell calling',
-                          default='')
     return parser
 
 def resolve_args(args) -> dict:
-    return {'FDR':args.FDR, 'samples':args.samples}
+    return {'FDR':args.FDR}
 
 def build_parser(parser) -> argparse.ArgumentParser:
     common.prepare_args(parser, use_filter=use_filter, 
@@ -212,6 +209,7 @@ def main(parser, args):
     gene_ids = gdf['gene_id'].values
 
     if args.samples is not None:
+        print('FIX ME AND MAKE THIS AUTOMATIC')
         sample_cells = []
         for s in args.samples:
             idx = np.array([i for i, b in enumerate(barcodes) if b.startswith(f'{sample}_')])

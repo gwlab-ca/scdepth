@@ -53,7 +53,6 @@ struct TagCounter{
 
     void inc_pa_hex(TagSummary f, bool has_random_hex, bool is_random_hex){
         size_t idx = static_cast<size_t>(f);
-        merged_counts[idx]++;
         if(has_random_hex){
             if(is_random_hex) random_hex_counts[idx]++;
             else              polyA_counts[idx]++;
