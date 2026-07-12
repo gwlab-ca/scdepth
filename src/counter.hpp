@@ -16,22 +16,56 @@ namespace scdepth{
 using gtl::flat_hash_map;
 using gtl::flat_hash_set;
 
-struct TagSummary{
-    uint64_t                     low_quality = 0;
-    uint64_t                     bad_tags = 0;
-    uint64_t                     no_gene = 0;
-    uint64_t                     countable_reads = 0;
-    uint64_t                     total_reads = 0;
-    uint64_t                     spliced_reads = 0;
-    uint64_t                     ambiguous_reads = 0;
-    uint64_t                     unspliced_reads = 0;
+enum TagSummary{
+    TOTAL_READS = 0,
+    SPLICED_READS = 1,
+    AMBIGUOUS_READS= 2,
+    UNSPLICED_READS = 3,
+    COUNTABLE_READS = 4,
+    LOW_QUALITY = 5,
+    BAD_TAGS = 6,
+    NO_GENE = 7,
+    TOTAL_FIELDS = 8,
+};
+
+static constexpr std::array<std::string_view, TagSummary::TOTAL_FIELDS> TagNames = {
+    "total_reads",
+    "spliced_reads",
+    "ambiguous_reads",
+    "unspliced_reads",
+    "countable_reads",
+    "low_quality",
+    "bad_tags",
+    "no_gene"
+};
+
+struct TagCounter{
+    using CountArray = std::array<uint64_t, TagSummary::TOTAL_FIELDS>;
+    CountArray merged_counts{};
+    CountArray polyA_counts{};
+    CountArray random_hex_counts{};
+
+    void inc(TagSummary f, bool has_random_hex, bool is_random_hex){
+        size_t idx = static_cast<size_t>(f);
+        merged_counts[idx]++;
+        inc_pa_hex(f, has_random_hex, is_random_hex);
+    }
+
+    void inc_pa_hex(TagSummary f, bool has_random_hex, bool is_random_hex){
+        size_t idx = static_cast<size_t>(f);
+        merged_counts[idx]++;
+        if(has_random_hex){
+            if(is_random_hex) random_hex_counts[idx]++;
+            else              polyA_counts[idx]++;
+        }
+    }
 };
 
 class BarcodeCounter{
     public:
         using hmap = flat_hash_map<std::string, uint32_t>;
+        using cmap = flat_hash_map<std::string, TagCounter>;
         using smap = flat_hash_set<std::string>;
-        using tsmap = flat_hash_map<std::string, TagSummary>;
         ~BarcodeCounter(){
             if(bh_ != nullptr){
                 sam_hdr_destroy(bh_);
@@ -63,11 +97,11 @@ class BarcodeCounter{
         }
 
         size_t total_reads() const {
-            return full_.total_reads;
+            return full_.merged_counts[TagSummary::TOTAL_READS];
         }
 
         size_t countable_reads() const {
-            return full_.countable_reads;
+            return full_.merged_counts[TagSummary::COUNTABLE_READS];
         }
 
         bool finish();
@@ -95,8 +129,8 @@ class BarcodeCounter{
         std::string                  barcode_regex_str_;
         std::string                  random_hex_regex_str_;
         std::string                  random_hex_value_;
-        TagSummary                   full_;
-        tsmap                        ssum_;
+        TagCounter                   full_;
+        cmap                         ssum_;
 
         std::vector<std::string>     samples_;
         smap                         sample_set_;
