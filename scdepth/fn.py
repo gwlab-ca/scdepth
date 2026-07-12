@@ -24,7 +24,7 @@ def read_barcodes(prefix : str):
     barcodes.set_index('barcode', inplace=True, drop=True)
     return barcodes
 
-def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None, barcode_prefix : str = '') -> pd.DataFrame:
+def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None) -> pd.DataFrame:
     barcodes = pd.DataFrame(ds.barcodes)
     barcodes.set_index('barcode', inplace=True, drop=True)
 
@@ -39,10 +39,6 @@ def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None,
     elif os.path.isfile(prefix + '_positions.csv'):
         meta_file = prefix + '_positions.csv'
         barcodes_pos = pd.read_csv(meta_file)
-    elif barcode_prefix != '' and os.path.isfile(f'{prefix}_{barcode_prefix}_emptydrops.txt.gz'):
-        meta_file = f'{prefix}_{barcode_prefix}_emptydrops.txt.gz'
-        barcodes_pos = pd.read_csv(meta_file, sep='\t')[['barcode','is_cell', 'passed']]
-        barcodes_pos['is_cell'] = barcodes_pos['is_cell'].astype(int)
     elif os.path.isfile(prefix + '_emptydrops.txt.gz'):
         meta_file = prefix + '_emptydrops.txt.gz'
         barcodes_pos = pd.read_csv(meta_file, sep='\t')[['barcode','is_cell', 'passed']]
@@ -138,6 +134,33 @@ def parse_summary(prefix : str) -> SimpleNamespace:
     return SimpleNamespace(**d)
 
 def bulk_stats(ds : Downsampler, summary : SimpleNamespace) -> pd.DataFrame:
+    dd = {
+        'fraction':ds.fracs.copy(), 
+        'reads':ds.total_reads.copy(), 
+        'molecules':ds.total_molecules.copy(), 
+        'reads_discarded':ds.reads_discarded.copy(), 
+        'reads_excluded':ds.reads_excluded.copy(), 
+    }
+
+    if ds.has_sau:
+        dd['spliced_reads'] = ds.spliced_reads.copy()
+        dd['spliced_molecules'] = ds.spliced_molecules.copy()
+        dd['ambiguous_reads'] = ds.ambiguous_reads.copy()
+        dd['ambiguous_molecules'] = ds.ambiguous_molecules.copy()
+        dd['unspliced_reads'] = ds.unspliced_reads.copy()
+        dd['unspliced_molecules'] = ds.unspliced_molecules.copy()
+        dd['total_reads'] = ds.total_reads.copy()
+        dd['total_molecules'] = ds.total_molecules.copy()
+
+    df = pd.DataFrame(dd)
+    disc = df['reads_discarded'] + df['reads_excluded']
+    df['downsampled_frac'] = (disc + df['reads']) / summary.countable_reads
+    df['saturation'] = 100.0 - 100 * df['molecules'] / df['reads']
+    return df
+
+def sample_stats(ds : Downsampler, summary : SimpleNamespace) -> pd.DataFrame:
+    samples = set(ds.barcodes['sample'])
+    print(samples)
     dd = {
         'fraction':ds.fracs.copy(), 
         'reads':ds.total_reads.copy(), 

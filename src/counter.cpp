@@ -48,6 +48,7 @@ void BarcodeCounter::init(const std::string & lib_string, bool fwd, const std::s
     }
     sample_tag_[0] = sample_tag[0]; sample_tag_[1] = sample_tag[1]; 
     samples_ = samples;
+    std::cout << "samples = " << samples.size() << " tag = " << sample_tag << "\n";
     for(auto & s : samples){
         sample_set_.insert(s);
     }
@@ -132,7 +133,6 @@ bool BarcodeCounter::prepare_bam(const std::string & gtf, const std::string & in
     barcode_counts_.clear();
     full_ = TagCounter();
     ssum_.clear();
-    samples_.clear();
     shards_.reset();
     std::cout.imbue(std::locale(""));
     return true;
@@ -519,6 +519,7 @@ bool BarcodeCounter::finish(){
         std::cerr << "[errror] Error merging " << shards_.size() << " shard files\n";
         return false;
     }
+    std::cout << "finish samples = " << samples_.size() << "\n";
 
     {
         gzofstream gzo(out_file_ + "_barcode_index.txt.gz");
@@ -577,20 +578,21 @@ bool BarcodeCounter::finish(){
         os << "barcodes_detected\tlibrary\t" << barcode_counts_.size() << "\n";
     }
 
+    std::cout << "samples = " << samples_.size() << " ssum size = " << ssum_.size() << "\n";
     if(!samples_.empty()){
         std::ofstream os(out_file_ + "_sample_summary.txt");
         os << "key\ttype\tvalue\n";
-        for(auto & p : ssum_){
-            const TagCounter & ssum = p.second;
+        for(auto & s : samples_){
+            const TagCounter & ss = ssum_[s];
             for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
-                os << p.first << "_" << TagNames[i] << "\treads\t" << ssum.merged_counts[i] << "\n";
+                os << s << "_" << TagNames[i] << "\treads\t" << ss.merged_counts[i] << "\n";
             }
             if(!random_hex_regex_str_.empty()){
                 for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
-                    os << p.first << "_" << "polyA_" << TagNames[i] << "\treads\t" << ssum.polyA_counts[i] << "\n";
+                    os << s << "_" << "polyA_" << TagNames[i] << "\treads\t" << ss.polyA_counts[i] << "\n";
                 }
                 for(size_t i = 0; i < TagSummary::TOTAL_FIELDS; i++){
-                    os << p.first << "_" << "random_hex_" << TagNames[i] << "\treads\t" << ssum.random_hex_counts[i] << "\n";
+                    os << s << "_" << "random_hex_" << TagNames[i] << "\treads\t" << ss.random_hex_counts[i] << "\n";
                 }
             }
         }

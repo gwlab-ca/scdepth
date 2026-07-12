@@ -286,13 +286,31 @@ void DownsamplerThread::merge_barcode_(size_t i, const BarcodeCount & bc, const 
             data_.output.total.bc_reads[bidx] += bc_total_reads;
             data_.output.total.bc_mols[bidx] += bc_total_mols;
         }
+        out.spliced_reads[i] += bc_spliced_reads;
+        out.spliced_molecules[i] += bc_spliced_mols;
+        out.unspliced_reads[i] += bc_unspliced_reads;
+        out.unspliced_molecules[i] += bc_unspliced_mols;
+        out.ambiguous_reads[i] += bc_ambiguous_reads;
+        out.ambiguous_molecules[i] += bc_ambiguous_mols;
+        out.reads_discarded[i] += bco.dis_reads;
+        out.mols_discarded[i] += bco.dis_mols;
+        out.reads_excluded[i] += bc_excluded_reads;
+        if(data_.samples > 0){
+            uint32_t sample = data_.barcode2sample[bc.index];
+            size_t idx = (static_cast<size_t>(sample) * out.steps + i);
+            out.sample_total_reads[idx] += bc_total_reads;
+            out.sample_total_molecules[idx] += bc_total_mols;
+            out.sample_spliced_reads[idx] += bc_spliced_reads;
+            out.sample_spliced_molecules[idx] += bc_spliced_mols;
+            out.sample_unspliced_reads[idx] += bc_unspliced_reads;
+            out.sample_unspliced_molecules[idx] += bc_unspliced_mols;
+            out.sample_ambiguous_reads[idx] += bc_ambiguous_reads;
+            out.sample_ambiguous_molecules[idx] += bc_ambiguous_mols;
+            out.sample_reads_discarded[idx] += bco.dis_reads;
+            out.sample_mols_discarded[idx] += bco.dis_mols;
+            out.sample_reads_excluded[idx] += bc_excluded_reads;
+        }
     }
-    out.spliced_reads[i] += bc_spliced_reads;
-    out.spliced_molecules[i] += bc_spliced_mols;
-    out.unspliced_reads[i] += bc_unspliced_reads;
-    out.unspliced_molecules[i] += bc_unspliced_mols;
-    out.ambiguous_reads[i] += bc_ambiguous_reads;
-    out.ambiguous_molecules[i] += bc_ambiguous_mols;
 
     if(data_.output.calc_sau){
         if(!data_.aggregate_only){
@@ -306,10 +324,6 @@ void DownsamplerThread::merge_barcode_(size_t i, const BarcodeCount & bc, const 
             data_.output.ambiguous.bc_mols[bidx] += bc_ambiguous_mols;
         }
     }
-
-    out.reads_discarded[i] += bco.dis_reads;
-    out.mols_discarded[i] += bco.dis_mols;
-    out.reads_excluded[i] += bc_excluded_reads;
 
     if(!data_.aggregate_only){
         data_.output.bc_dis_reads[bidx] += bco.dis_reads;

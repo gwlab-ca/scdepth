@@ -80,6 +80,8 @@ void DownsampleResultsType::reset(const std::vector<double> & fracs, size_t barc
     sample_mhist.assign(fracs.size() * max_hist * samples, 0);
     reads.assign(fracs.size(), 0);
     molecules.assign(fracs.size(), 0);
+    sample_molecules.assign(fracs.size() * samples, 0);
+    sample_reads.assign(fracs.size() * samples, 0);
 
     if(alloc_barcodes){
         size_t N = barcodes * fracs.size();
@@ -105,6 +107,8 @@ void DownsampleResultsType::merge(const DownsampleResultsType & rhs){
     sum_vectors(mhist, rhs.mhist, false);
     if(sample_mhist.size() > 0){
         sum_vectors(sample_mhist, rhs.sample_mhist, false);
+        sum_vectors(sample_reads, rhs.sample_reads, false);
+        sum_vectors(sample_molecules, rhs.sample_molecules, false);
     }
     sum_vectors(reads, rhs.reads, false);
     sum_vectors(molecules, rhs.molecules, false);
@@ -145,6 +149,20 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     total_molecules.resize(fracs.size());
     total_mhist.resize(fracs.size() * max_hist);
 
+
+    sample_reads_discarded.resize(samples * fracs.size());
+    sample_reads_excluded.resize(samples * fracs.size());
+    sample_mols_discarded.resize(samples * fracs.size());
+    sample_total_molecules.resize(samples * fracs.size());
+    sample_total_reads.resize(samples * fracs.size());
+    sample_spliced_molecules.resize(samples * fracs.size());
+    sample_spliced_reads.resize(samples * fracs.size());
+    sample_unspliced_molecules.resize(samples * fracs.size());
+    sample_unspliced_reads.resize(samples * fracs.size());
+    sample_ambiguous_molecules.resize(samples * fracs.size());
+    sample_ambiguous_reads.resize(samples * fracs.size());
+
+
     this->calc_sau = calc_sau;
     this->build_mats = build_mats;
     this->has_visium = has_visium;
@@ -178,11 +196,15 @@ void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes
     this->barcodes = barcodes;
     this->max_hist = max_hist;
     this->genes = genes;
+    this->samples = samples;
 
     reads_discarded.resize(fracs.size());
     reads_excluded.resize(fracs.size());
     mols_discarded.resize(fracs.size());
-    mols_ambig.resize(fracs.size());
+
+    sample_reads_discarded.resize(fracs.size() * samples);
+    sample_reads_excluded.resize(fracs.size() * samples);
+    sample_mols_discarded.resize(fracs.size() * samples);
 
     //total_singles.resize(fracs.size());
     //ed0_cross.resize(fracs.size());
@@ -259,6 +281,17 @@ void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
         sum_vectors(unspliced.sample_mhist, rhs.unspliced_sample_mhist, false);
         sum_vectors(total.sample_mhist, rhs.total_sample_mhist, false);
         sum_vectors(ambiguous.sample_mhist, rhs.ambiguous_sample_mhist, false);
+        sum_vectors(sample_reads_discarded, rhs.sample_reads_discarded, false);
+        sum_vectors(sample_reads_excluded, rhs.sample_reads_excluded, false);
+        sum_vectors(sample_mols_discarded, rhs.sample_mols_discarded, false);
+        sum_vectors(unspliced.sample_reads, rhs.sample_unspliced_reads, false);
+        sum_vectors(unspliced.sample_molecules, rhs.sample_unspliced_molecules, false);
+        sum_vectors(spliced.sample_reads, rhs.sample_spliced_reads, false);
+        sum_vectors(spliced.sample_molecules, rhs.sample_spliced_molecules, false);
+        sum_vectors(ambiguous.sample_reads, rhs.sample_ambiguous_reads, false);
+        sum_vectors(ambiguous.sample_molecules, rhs.sample_ambiguous_molecules, false);
+        sum_vectors(total.sample_reads, rhs.sample_total_reads, false);
+        sum_vectors(total.sample_molecules, rhs.sample_total_molecules, false);
     }
 
     if(build_mats){

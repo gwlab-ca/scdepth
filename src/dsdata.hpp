@@ -74,8 +74,10 @@ struct DownsampleResultsType{
     std::vector<uint32_t>              mhist;            // reads per molecule
     std::vector<uint32_t>              sample_mhist;     // reads per molecule per sample
 
-    std::vector<uint64_t> molecules;        // fracs
-    std::vector<uint64_t> reads;            // fracs
+    std::vector<uint64_t>              molecules;        // fracs
+    std::vector<uint64_t>              reads;            // fracs
+    std::vector<uint64_t>              sample_molecules; // samples x fracs
+    std::vector<uint64_t>              sample_reads;     // samples x fracs
     //std::vector<uint64_t> gene_molecules;   // fracs x genes
     //std::vector<uint64_t> gene_reads;       // fracs x genes
 };
@@ -114,6 +116,18 @@ struct DownsampleResultsLocal{
     std::vector<SparseMatrix>           spliced_mat;
     std::vector<SparseMatrix>           ambiguous_mat;
     std::vector<SparseMatrix>           unspliced_mat;
+
+    std::vector<uint64_t>               sample_reads_discarded;        // samples x fracs
+    std::vector<uint64_t>               sample_reads_excluded;         // samples x fracs
+    std::vector<uint64_t>               sample_mols_discarded;         // samples x fracs
+    std::vector<uint64_t>               sample_total_molecules;        // samples x fracs
+    std::vector<uint64_t>               sample_total_reads;            // samples x fracs
+    std::vector<uint64_t>               sample_spliced_molecules;      // samples x fracs
+    std::vector<uint64_t>               sample_spliced_reads;          // samples x fracs
+    std::vector<uint64_t>               sample_unspliced_molecules;    // samples x fracs
+    std::vector<uint64_t>               sample_unspliced_reads;        // samples x fracs
+    std::vector<uint64_t>               sample_ambiguous_molecules;    // samples x fracs
+    std::vector<uint64_t>               sample_ambiguous_reads;        // samples x fracs
 
     size_t                              steps = 0;
     size_t                              barcodes = 0;
@@ -160,7 +174,9 @@ struct DownsampleResults{
     std::vector<uint64_t>               reads_discarded;
     std::vector<uint64_t>               reads_excluded;
     std::vector<uint64_t>               mols_discarded;
-    std::vector<uint64_t>               mols_ambig;
+    std::vector<uint64_t>               sample_reads_discarded;
+    std::vector<uint64_t>               sample_reads_excluded;
+    std::vector<uint64_t>               sample_mols_discarded;
 
     std::vector<GeneCountMatrix>        gcounts;
     std::string                         primer_mode;

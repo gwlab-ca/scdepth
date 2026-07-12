@@ -49,6 +49,14 @@ The `count` command includes additional options for:
 - sample multiplexing (sample barcode prefixes)
 - poly(A)- and random-hexamer-derived molecules
 
+The `genes.gtf(.gz)` annotation must contain `transcript` and `exon` features. The Parse reference annotation removes these features, so the original Ensembl/GENCODE `genes.gtf.gz` should be modified by adding the Parse reference genome prefix to the chromosome names.
+
+For example, to prepend `hg38_` to each chromosome:
+
+```
+zcat genes.gtf.gz | awk 'BEGIN{FS=OFS="\t"} /^#/ {print; next} {$1="hg38_"$1; print}' | gzip > genes_fixed.gtf.gz
+```
+
 The `emptydrops` command includes a corresponding option to specify the same sample list used with `scdepth cache`.
 
 Downstream commands currently operate on the processed molecule table and do not provide Parse-specific options for sample multiplexing or primer selection. These analyses should be performed after preprocessing the desired subset.

@@ -130,7 +130,6 @@ Clear output memory.
 | `has_module` | property | A module gene list was included |
 | `has_sau` | property | Has spliced/ambig/unspliced quantifications |
 | `max_hist` | property | Maximum histogram bin (histograms have size max_hist+1) |
-| `molecules_ambig` | property | Number of molecule subgraphs mapping to at least 2 genes. |
 | `molecules_discarded` | property | Number of molecules lost to ambiguous UMI/gene mappings |
 | `reads_discarded` | property | Number of reads lost to ambiguous UMI/gene mappings |
 | `reads_excluded` | property | Number of reads lost to excluded gene filter |
@@ -165,3 +164,14 @@ Clear output memory.
 | `sample_unspliced_mhists` | property | Histogram of unspliced reads per MT molecule (samples x steps x max_hist), only available if barcode2sample was specified |
 | `unspliced_molecules` | property | Number of unspliced molecules |
 | `unspliced_reads` | property | Number of unspliced reads |
+| `sample_spliced_reads` | property | Multiplexed number of spliced reads (samples x steps) |
+| `sample_unspliced_reads` | property | Multiplexed number of unspliced reads (samples x steps) |
+| `sample_ambiguous_reads` | property | Multiplexed number of ambiguous reads (samples x steps) |
+| `sample_total_reads` | property | Multiplexed number of total reads (samples x steps) |
+| `sample_spliced_molecules` | property | Multiplexed number of spliced molecules (samples x steps) |
+| `sample_unspliced_molecules` | property | Multiplexed number of unspliced molecules (samples x steps) |
+| `sample_ambiguous_molecules` | property | Multiplexed number of ambiguous molecules (samples x steps) |
+| `sample_total_molecules` | property | Multiplexed number of total molecules (samples x steps) |
+| `sample_reads_discarded` | property | Multiplexed number of reads lost to ambiguous UMI/gene mappings (samples x steps) |
+| `sample_molecules_discarded` | property | Multiplexed number of molecules lost to ambiguous UMI/gene mappings (samples x steps) |
+| `sample_reads_excluded` | property | Multiplexed number of reads lost to the excluded gene filter (samples x steps) |

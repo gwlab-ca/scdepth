@@ -302,12 +302,84 @@ void scdepth::bind_downsampler(py::module_ &m) {
             },
             "Number of reads lost to excluded gene filter")
 
-        .def_property_readonly("molecules_ambig",
+        .def_property_readonly("sample_spliced_reads",
             [](Downsampler &self) {
                 auto &res = self.output;
-                return make_1d_u64(res.mols_ambig, py::cast(&self));
+                return make_2d_u64(res.spliced.reads, res.samples, res.steps, py::cast(&self));
             },
-            "Number of molecule subgraphs mapping to at least 2 genes.")
+            "Multiplexed number of spliced reads (samples x steps)")
+
+        .def_property_readonly("sample_unspliced_reads",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.unspliced.reads, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of unspliced reads (samples x steps)")
+
+        .def_property_readonly("sample_ambiguous_reads",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.ambiguous.reads, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of ambiguous reads (samples x steps)")
+
+        .def_property_readonly("sample_total_reads",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.total.reads, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of total reads (samples x steps)")
+
+        .def_property_readonly("sample_spliced_molecules",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.spliced.molecules, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of spliced molecules (samples x steps)")
+
+        .def_property_readonly("sample_unspliced_molecules",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.unspliced.molecules, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of unspliced molecules (samples x steps)")
+
+        .def_property_readonly("sample_ambiguous_molecules",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.ambiguous.molecules, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of ambiguous molecules (samples x steps)")
+
+        .def_property_readonly("sample_total_molecules",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.total.molecules, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of total molecules (samples x steps)")
+
+
+        //UMI correction / ambig umi filtering / exclude filtering -----------------------------------------------
+        .def_property_readonly("sample_reads_discarded",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.reads_discarded, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of reads lost to ambiguous UMI/gene mappings (samples x steps)")
+
+        .def_property_readonly("sample_molecules_discarded",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.mols_discarded, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of molecules lost to ambiguous UMI/gene mappings (samples x steps)")
+
+        .def_property_readonly("sample_reads_excluded",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_2d_u64(res.reads_excluded, res.samples, res.steps, py::cast(&self));
+            },
+            "Multiplexed number of reads lost to excluded gene filter (samples x steps)")
 
         //barcode count matrices  --------------------------------------------------------------------------- 
         .def_property_readonly("total_bc_reads",
@@ -661,7 +733,7 @@ void scdepth::bind_downsampler(py::module_ &m) {
                                 res.max_hist,
                                 py::cast(&self));
             },
-            "Histogram of ambiguous reads per MT molecule (steps x max_hist)")
+            "Histogram of ambiguous reads per molecule (steps x max_hist)")
 
         .def_property_readonly("sample_total_mhists",
             [](Downsampler &self) {
