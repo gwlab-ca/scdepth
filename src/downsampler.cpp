@@ -16,18 +16,28 @@ bool Downsampler::init(const std::string & prefix,
         const std::string & mt_prefix, const std::string & mt_file, 
         const std::string & mod_file, const std::string & exclude_file, 
         size_t max_hist, bool build_matrices, bool calc_sau,
-        const std::vector<uint32_t> & barcode_samples){
+        const std::vector<uint32_t> & barcode2sample){
 
     this->prefix = prefix;
     this->build_mats_ = build_matrices;
     this->calc_sau_ = calc_sau;
-    this->samples = barcode_samples;
+    this->barcode2sample = barcode2sample;
+
+    samples = 0;
+    for(auto s : barcode2sample){
+        samples = std::max(s + 1, samples);
+    }
     max_hist_ = max_hist;
     barcodes = read_barcode_index(prefix + "_barcode_index.txt.gz");
     if(barcodes.empty()){
         std::cerr << "[error] barcode index is empty";
         return false;
     }
+    if(barcode2sample.size() != barcodes.size()){
+        std::cerr << "barcode2sample size mismatch " << barcode2sample.size() << " vs expected = " << barcodes.size() << "\n";
+        return false;
+    }
+
     auto genes = read_gtf2mapping(prefix + "_genes.txt.gz");
     if(genes.empty()){
         std::cerr << "[error] gene mapping file is empty";
@@ -189,7 +199,7 @@ bool Downsampler::downsample(std::vector<double> & fracs,
         has_visium = true;
     }
     if(!has_visium) reset_visium();
-    output.reset(fracs, barcodes.size(), genes_, max_hist_, build_mats_, this->calc_sau_, !aggregate_only, has_visium);
+    output.reset(fracs, barcodes.size(), genes_, max_hist_, build_mats_, this->calc_sau_, !aggregate_only, has_visium, samples);
     output.aggregate_only = aggregate_only;
     //if visium output is specified get it ready
     if(total_rows > 0 && total_cols > 0){

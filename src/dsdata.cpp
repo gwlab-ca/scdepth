@@ -103,7 +103,9 @@ void DownsampleResultsType::reset(const std::vector<double> & fracs, size_t barc
 
 void DownsampleResultsType::merge(const DownsampleResultsType & rhs){
     sum_vectors(mhist, rhs.mhist, false);
-    sum_vectors(sample_mhist, rhs.sample_mhist, false);
+    if(sample_mhist.size() > 0){
+        sum_vectors(sample_mhist, rhs.sample_mhist, false);
+    }
     sum_vectors(reads, rhs.reads, false);
     sum_vectors(molecules, rhs.molecules, false);
 }
@@ -252,10 +254,12 @@ void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
     sum_vectors(reads_excluded, rhs.reads_excluded, false);
     sum_vectors(mols_discarded, rhs.mols_discarded, false);
 
-    sum_vectors(spliced.sample_mhist, rhs.spliced_sample_mhist, false);
-    sum_vectors(unspliced.sample_mhist, rhs.unspliced_sample_mhist, false);
-    sum_vectors(total.sample_mhist, rhs.total_sample_mhist, false);
-    sum_vectors(ambiguous.sample_mhist, rhs.ambiguous_sample_mhist, false);
+    if(samples > 0){
+        sum_vectors(spliced.sample_mhist, rhs.spliced_sample_mhist, false);
+        sum_vectors(unspliced.sample_mhist, rhs.unspliced_sample_mhist, false);
+        sum_vectors(total.sample_mhist, rhs.total_sample_mhist, false);
+        sum_vectors(ambiguous.sample_mhist, rhs.ambiguous_sample_mhist, false);
+    }
 
     if(build_mats){
         if(calc_sau){

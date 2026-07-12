@@ -14,7 +14,7 @@ DownsamplerThread::DownsamplerThread(Downsampler & data, uint32_t umi_len,
 {
     out.reset(data.output.fracs, data.output.barcodes, genes, data.output.max_hist, 
             data.output.build_mats, data.has_visium, data.output.calc_sau,
-            data.aggregate_only);
+            data.aggregate_only, data.samples);
 }
 
 DownsamplerThread::~DownsamplerThread(){
@@ -188,6 +188,18 @@ void DownsamplerThread::merge_barcode_(size_t i, const BarcodeCount & bc, const 
             total_reads += ut;
             total_mols++;
             out.total_mhist[m]++;
+            if(data_.samples > 0){
+                uint32_t sample = data_.barcode2sample[bc.index];
+                size_t idx = (static_cast<size_t>(sample) * out.steps + i) * out.max_hist + mc;
+                out.total_sample_mhist[idx]++;
+                if(u.spliced > 0){
+                    out.spliced_sample_mhist[idx]++;
+                }else if(u.unspliced > 0){
+                    out.unspliced_sample_mhist[idx]++;
+                }else{
+                    out.ambiguous_sample_mhist[idx]++;
+                }
+            }
             //bc_mhist_[mc]++;
             if(u.spliced > 0){
                 out.spliced_mhist[m]++;

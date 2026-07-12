@@ -28,7 +28,7 @@ class Downsampler{
         bool init(const std::string & prefix, const std::string & mt_prefix, const std::string & mt_file, 
                 const std::string & mod_file, const std::string & exclude_file,  
                 size_t max_hist = 40, bool build_matrices = false, bool calc_sau = false,
-                const std::vector<uint32_t> & samples = {});
+                const std::vector<uint32_t> & barcode2sample = {});
 
         bool init_visium(const std::vector<uint32_t> & rows, const std::vector<uint32_t> & cols, 
                 std::vector<uint32_t> & in_tissue, std::vector<uint32_t> & countable_reads, 
@@ -58,14 +58,14 @@ class Downsampler{
         std::vector<bool>           mt_filter;
         std::vector<bool>           exclude_filter;
         std::vector<bool>           mod_filter;
-        std::vector<uint32_t>       samples;
-        size_t                      longest_sample_len = 0;
+        std::vector<uint32_t>       barcode2sample;
         std::string                 prefix;
         std::string                 primer_mode_str = "";
 
         uint32_t                    bin_div = 0;
         uint32_t                    total_rows = 0;
         uint32_t                    total_cols = 0;
+        uint32_t                    samples = 0;
 
         PrimerMode                  primer_mode = PrimerMode::Merge;
 

@@ -22,6 +22,8 @@ py::dict barcodes_to_cols(const Downsampler& ds){
     py::array_t<uint32_t> total(n);
     py::array_t<uint32_t> countable(n);
     py::array_t<uint32_t> raw_molecules(n);
+    py::array_t<uint32_t> random_hex(n);
+    py::array_t<uint32_t> polyA(n);
 
     auto off = offset.mutable_unchecked<1>();
     auto sed = seed.mutable_unchecked<1>();
@@ -29,16 +31,21 @@ py::dict barcodes_to_cols(const Downsampler& ds){
     auto tot = total.mutable_unchecked<1>();
     auto cnt = countable.mutable_unchecked<1>();
     auto raw = raw_molecules.mutable_unchecked<1>();
+    auto rh = random_hex.mutable_unchecked<1>();
+    auto pa = polyA.mutable_unchecked<1>();
 
     py::array_t<py::object> barcode_obj(n);
+    py::array_t<py::object> sample_obj(n);
 
     auto bptr = static_cast<py::object*>(barcode_obj.mutable_data());
+    auto sptr = static_cast<py::object*>(sample_obj.mutable_data());
 
     for(py::ssize_t i = 0; i < n; ++i){
         const auto& bc = v[(size_t)i];
 
         // construct Python string and store into object array
         bptr[i] = py::str(bc.barcode);
+        sptr[i] = py::str(bc.sample);
 
         off(i) = bc.offset;
         sed(i) = bc.seed;
@@ -46,10 +53,13 @@ py::dict barcodes_to_cols(const Downsampler& ds){
         tot(i) = bc.total;
         cnt(i) = bc.countable;
         raw(i) = bc.raw_molecules;
+        pa(i) = bc.random_hex;
+        rh(i) = bc.poly_a;
     }
 
     py::dict d;
     d["barcode"] = std::move(barcode_obj);
+    d["sample"] = std::move(sample_obj);
     d["offset"] = std::move(offset);
     d["seed"] = std::move(seed);
     d["index"] = std::move(index);
@@ -74,6 +84,7 @@ void scdepth::bind_downsampler(py::module_ &m) {
              py::arg("max_hist") = 50,
              py::arg("build_matrices") = false,
              py::arg("calc_sau") = false,
+             py::arg("barcode2sample") = std::vector<uint32_t>{},
              py::call_guard<py::gil_scoped_release>{},
              "Initialize the downsampler from a cached prefix")
 
@@ -651,6 +662,51 @@ void scdepth::bind_downsampler(py::module_ &m) {
                                 py::cast(&self));
             },
             "Histogram of ambiguous reads per MT molecule (steps x max_hist)")
+
+        .def_property_readonly("sample_total_mhists",
+            [](Downsampler &self) {
+                auto &res = self.output;
+
+                return make_3d_u32(res.total.sample_mhist,
+                                res.samples,
+                                res.steps,
+                                res.max_hist,
+                                py::cast(&self));
+            },
+            "Histogram of total reads per molecule (samples x steps x max_hist)")
+
+        .def_property_readonly("sample_spliced_mhists",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_3d_u32(res.spliced.sample_mhist,
+                                res.samples,
+                                res.steps,
+                                res.max_hist,
+                                py::cast(&self));
+            },
+            "Histogram of spliced reads per molecule (samples x steps x max_hist)")
+
+        .def_property_readonly("sample_unspliced_mhists",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_3d_u32(res.unspliced.sample_mhist,
+                                res.samples,
+                                res.steps,
+                                res.max_hist,
+                                py::cast(&self));
+            },
+            "Histogram of unspliced reads per molecule (samples x steps x max_hist)")
+
+        .def_property_readonly("sample_ambiguous_mhists",
+            [](Downsampler &self) {
+                auto &res = self.output;
+                return make_3d_u32(res.ambiguous.sample_mhist,
+                                res.samples,
+                                res.steps,
+                                res.max_hist,
+                                py::cast(&self));
+            },
+            "Histogram of ambiguous reads per MT molecule (samples x steps x max_hist)")
 
         //sparse matrices  --------------------------------------------------------------------------- 
         .def("total_csr",

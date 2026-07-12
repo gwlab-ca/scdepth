@@ -30,6 +30,7 @@ init(
     max_hist=50,
     build_matrices=False,
     calc_sau=False,
+    barcode2sample=[]
 )
 ```
 
@@ -117,6 +118,7 @@ Clear output memory.
 | `ambiguous_mhist` | property | Histogram of ambiguous reads per MT molecule (steps x max_hist) |
 | `ambiguous_molecules` | property | Number of ambiguous molecules |
 | `ambiguous_reads` | property | Number of ambiguous reads |
+| `sample_ambiguous_mhists` | property | Histogram of ambiguous reads per MT molecule (samples x steps x max_hist), only available if barcode2sample was specified |
 | `barcodes` | property | Barcode columns as a dict-of-arrays (DataFrame-friendly) |
 | `bc_discarded_moleculess` | property | Molecules lost from multi-gene UMIs (steps x barcodes) |
 | `bc_discarded_reads` | property | Reads lost from multi-gene UMIs and excluded gene lists (steps x barcodes) |
@@ -141,6 +143,7 @@ Clear output memory.
 | `spliced_mhist` | property | Histogram of spliced reads per molecule (steps x max_hist) |
 | `spliced_molecules` | property | Number of spliced molecules |
 | `spliced_reads` | property | Number of spliced reads |
+| `sample_spliced_mhists` | property | Histogram of spliced reads per MT molecule (samples x steps x max_hist), only available if barcode2sample was specified |
 | `total_barcodes` | property | Number of raw barcodes in the results |
 | `total_bc_genes` | property | Total genes per barcode shape (steps x barcodes) |
 | `total_bc_mod` | property | Total module mols per barcode shape (steps x barcodes) |
@@ -152,11 +155,13 @@ Clear output memory.
 | `total_mhist` | property | Histogram of total reads per molecule (steps x max_hist) |
 | `total_molecules` | property | Number of total molecules |
 | `total_reads` | property | Number of total reads |
+| `sample_total_mhists` | property | Histogram of total reads per MT molecule (samples x steps x max_hist), only available if barcode2sample was specified |
 | `unspliced_bc_genes` | property | Unspliced genes per barcode shape (steps x barcodes) |
 | `unspliced_bc_mod` | property | Unspliced module mols per barcode shape (steps x barcodes) |
 | `unspliced_bc_mols` | property | Unspliced molecules per barcode shape (steps x barcodes) |
 | `unspliced_bc_mt` | property | Unspliced MT mols per barcode shape (steps x barcodes) |
 | `unspliced_bc_reads` | property | Unspliced reads per barcode shape (steps x barcodes) |
 | `unspliced_mhist` | property | Histogram of unspliced reads per molecule (steps x max_hist) |
+| `sample_unspliced_mhists` | property | Histogram of unspliced reads per MT molecule (samples x steps x max_hist), only available if barcode2sample was specified |
 | `unspliced_molecules` | property | Number of unspliced molecules |
 | `unspliced_reads` | property | Number of unspliced reads |
