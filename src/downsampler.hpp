@@ -27,8 +27,7 @@ class Downsampler{
 
         bool init(const std::string & prefix, const std::string & mt_prefix, const std::string & mt_file, 
                 const std::string & mod_file, const std::string & exclude_file,  
-                size_t max_hist = 40, bool build_matrices = false, bool calc_sau = false,
-                const std::vector<uint32_t> & barcode2sample = {});
+                size_t max_hist = 40, bool build_matrices = false, bool calc_sau = false);
 
         bool init_visium(const std::vector<uint32_t> & rows, const std::vector<uint32_t> & cols, 
                 std::vector<uint32_t> & in_tissue, std::vector<uint32_t> & countable_reads, 
@@ -43,7 +42,8 @@ class Downsampler{
         bool downsample(std::vector<double> & fracs, 
                 uint32_t umi_len, uint64_t seed, unsigned int threads = 1, bool aggregate_only = false,
                 const std::string & umi_mode = "directed", bool correct_multi_umis = true,
-                const std::string & primer_mode = "merge");
+                const std::string & primer_mode = "merge",
+                const std::vector<uint32_t> & barcode2sample = {});
 
         bool write_gene_mats(const std::string & out, const std::vector<uint32_t> & idx,
                 uint32_t bin_div = 0);

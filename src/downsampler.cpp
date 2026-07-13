@@ -15,25 +15,18 @@ using namespace scdepth;
 bool Downsampler::init(const std::string & prefix, 
         const std::string & mt_prefix, const std::string & mt_file, 
         const std::string & mod_file, const std::string & exclude_file, 
-        size_t max_hist, bool build_matrices, bool calc_sau,
-        const std::vector<uint32_t> & barcode2sample){
+        size_t max_hist, bool build_matrices, bool calc_sau){
 
     this->prefix = prefix;
     this->build_mats_ = build_matrices;
     this->calc_sau_ = calc_sau;
-    this->barcode2sample = barcode2sample;
-
-    samples = 0;
-    for(auto s : barcode2sample){
-        samples = std::max(s + 1, samples);
-    }
     max_hist_ = max_hist;
     barcodes = read_barcode_index(prefix + "_barcode_index.txt.gz");
     if(barcodes.empty()){
         std::cerr << "[error] barcode index is empty";
         return false;
     }
-    if(barcode2sample.size() != barcodes.size()){
+    if(!barcode2sample.empty() && barcode2sample.size() != barcodes.size()){
         std::cerr << "barcode2sample size mismatch " << barcode2sample.size() << " vs expected = " << barcodes.size() << "\n";
         return false;
     }
@@ -150,7 +143,7 @@ uint32_t sum_sparse(size_t row, const SparseMatrix & s){
 bool Downsampler::downsample(std::vector<double> & fracs, 
         uint32_t umi_len, uint64_t seed, unsigned int threads, bool aggregate_only,
         const std::string & umi_mode, bool correct_multi_umis,
-        const std::string & primer_mode){
+        const std::string & primer_mode, const std::vector<uint32_t> & barcode2sample){
         //bool profile_umi_singletons){
     chunks_.clear();
     if(fracs.empty()){
@@ -163,6 +156,12 @@ bool Downsampler::downsample(std::vector<double> & fracs,
             return false;
         }
     }
+    this->barcode2sample = barcode2sample;
+    samples = 0;
+    for(auto s : barcode2sample){
+        samples = std::max(s + 1, samples);
+    }
+    //std::cout << "total samples = " << samples << std::endl;
     this->aggregate_only = aggregate_only;
     if(threads < 1) threads = 1;
     if(threads > barcodes.size()) threads = barcodes.size();

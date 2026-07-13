@@ -144,6 +144,7 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     spliced_sample_mhist.resize(fracs.size() * max_hist * samples);
     unspliced_sample_mhist.resize(fracs.size() * max_hist * samples);
     ambiguous_sample_mhist.resize(fracs.size() * max_hist * samples);
+    total_sample_mhist.resize(fracs.size() * max_hist * samples);
 
     total_reads.resize(fracs.size());
     total_molecules.resize(fracs.size());

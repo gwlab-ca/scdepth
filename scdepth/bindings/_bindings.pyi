@@ -56,7 +56,7 @@ class Downsampler:
         """
         Clear output memory
         """
-    def downsample(self, fracs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex], umi_len: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex, threads: typing.SupportsInt | typing.SupportsIndex = 1, aggregate_only: bool = False, umi_mode: str = 'directed', correct_multi_umis: bool = True, barcode_prefix: str = '', primer_mode: str = 'merge') -> bool:
+    def downsample(self, fracs: collections.abc.Sequence[typing.SupportsFloat | typing.SupportsIndex], umi_len: typing.SupportsInt | typing.SupportsIndex, seed: typing.SupportsInt | typing.SupportsIndex, threads: typing.SupportsInt | typing.SupportsIndex = 1, aggregate_only: bool = False, umi_mode: str = 'directed', correct_multi_umis: bool = True, primer_mode: str = 'merge', barcode2sample: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex] = []) -> bool:
         """
         Run downsampling for the given barcodes (optional) and fractions
         """
@@ -121,7 +121,7 @@ class Downsampler:
     @property
     def ambiguous_mhist(self) -> numpy.typing.NDArray[numpy.uint32]:
         """
-        Histogram of ambiguous reads per MT molecule (steps x max_hist)
+        Histogram of ambiguous reads per molecule (steps x max_hist)
         """
     @property
     def ambiguous_molecules(self) -> numpy.typing.NDArray[numpy.uint64]:
@@ -132,11 +132,6 @@ class Downsampler:
     def ambiguous_reads(self) -> numpy.typing.NDArray[numpy.uint64]:
         """
         Number of ambiguous reads
-        """
-    @property
-    def barcode_prefix(self) -> str:
-        """
-        Number of downsampling fractions
         """
     @property
     def barcodes(self) -> dict:
@@ -194,11 +189,6 @@ class Downsampler:
         Maximum histogram bin (histograms have size max_hist+1)
         """
     @property
-    def molecules_ambig(self) -> numpy.typing.NDArray[numpy.uint64]:
-        """
-        Number of molecule subgraphs mapping to at least 2 genes.
-        """
-    @property
     def molecules_discarded(self) -> numpy.typing.NDArray[numpy.uint64]:
         """
         Number of molecules lost to ambiguous UMI/gene mappings
@@ -217,6 +207,81 @@ class Downsampler:
     def reads_excluded(self) -> numpy.typing.NDArray[numpy.uint64]:
         """
         Number of reads lost to excluded gene filter
+        """
+    @property
+    def sample_ambiguous_mhists(self) -> numpy.ndarray:
+        """
+        Histogram of ambiguous reads per MT molecule (samples x steps x max_hist)
+        """
+    @property
+    def sample_ambiguous_molecules(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of ambiguous molecules (samples x steps)
+        """
+    @property
+    def sample_ambiguous_reads(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of ambiguous reads (samples x steps)
+        """
+    @property
+    def sample_molecules_discarded(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of molecules lost to ambiguous UMI/gene mappings (samples x steps)
+        """
+    @property
+    def sample_reads_discarded(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of reads lost to ambiguous UMI/gene mappings (samples x steps)
+        """
+    @property
+    def sample_reads_excluded(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of reads lost to excluded gene filter (samples x steps)
+        """
+    @property
+    def sample_spliced_mhists(self) -> numpy.ndarray:
+        """
+        Histogram of spliced reads per molecule (samples x steps x max_hist)
+        """
+    @property
+    def sample_spliced_molecules(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of spliced molecules (samples x steps)
+        """
+    @property
+    def sample_spliced_reads(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of spliced reads (samples x steps)
+        """
+    @property
+    def sample_total_mhists(self) -> numpy.ndarray:
+        """
+        Histogram of total reads per molecule (samples x steps x max_hist)
+        """
+    @property
+    def sample_total_molecules(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of total molecules (samples x steps)
+        """
+    @property
+    def sample_total_reads(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of total reads (samples x steps)
+        """
+    @property
+    def sample_unspliced_mhists(self) -> numpy.ndarray:
+        """
+        Histogram of unspliced reads per molecule (samples x steps x max_hist)
+        """
+    @property
+    def sample_unspliced_molecules(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of unspliced molecules (samples x steps)
+        """
+    @property
+    def sample_unspliced_reads(self) -> numpy.typing.NDArray[numpy.uint64]:
+        """
+        Multiplexed number of unspliced reads (samples x steps)
         """
     @property
     def seed(self) -> int:

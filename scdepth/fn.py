@@ -31,7 +31,11 @@ def read_barcodes_meta(ds : Downsampler, prefix : str, meta : str | None = None)
     barcodes_pos = None
     if meta is not None:
         meta_file = meta
-        barcodes_pos = pd.read_csv(meta_file, sep='\t')[['barcode','is_cell']]
+        barcodes_pos = pd.read_csv(meta_file, sep='\t')
+        cols = ['barcode','is_cell']
+        if 'passed' in barcodes_pos.columns:
+            cols.append('passed')
+        barcodes_pos = barcodes_pos[cols]
         barcodes_pos['is_cell'] = barcodes_pos['is_cell'].astype(int)
     elif os.path.isfile(prefix + '_positions.parquet'):
         meta_file = prefix + '_positions.parquet'
@@ -158,31 +162,45 @@ def bulk_stats(ds : Downsampler, summary : SimpleNamespace) -> pd.DataFrame:
     df['saturation'] = 100.0 - 100 * df['molecules'] / df['reads']
     return df
 
-def sample_stats(ds : Downsampler, summary : SimpleNamespace) -> pd.DataFrame:
-    samples = set(ds.barcodes['sample'])
-    print(samples)
-    dd = {
-        'fraction':ds.fracs.copy(), 
-        'reads':ds.total_reads.copy(), 
-        'molecules':ds.total_molecules.copy(), 
-        'reads_discarded':ds.reads_discarded.copy(), 
-        'reads_excluded':ds.reads_excluded.copy(), 
-    }
+def barcode2sample(ds : Downsampler) -> pd.DataFrame:
+    bs = ds.barcodes['sample']
+    samples = sorted(set(bs))
+    sidx_map = {s:i for i, s in enumerate(samples)}
+    return samples, np.array([sidx_map[s] for s in bs], dtype='uint32')
 
-    if ds.has_sau:
-        dd['spliced_reads'] = ds.spliced_reads.copy()
-        dd['spliced_molecules'] = ds.spliced_molecules.copy()
-        dd['ambiguous_reads'] = ds.ambiguous_reads.copy()
-        dd['ambiguous_molecules'] = ds.ambiguous_molecules.copy()
-        dd['unspliced_reads'] = ds.unspliced_reads.copy()
-        dd['unspliced_molecules'] = ds.unspliced_molecules.copy()
-        dd['total_reads'] = ds.total_reads.copy()
-        dd['total_molecules'] = ds.total_molecules.copy()
 
-    df = pd.DataFrame(dd)
-    disc = df['reads_discarded'] + df['reads_excluded']
-    df['downsampled_frac'] = (disc + df['reads']) / summary.countable_reads
-    df['saturation'] = 100.0 - 100 * df['molecules'] / df['reads']
+def sample_stats(samples, ds : Downsampler, summary : SimpleNamespace) -> pd.DataFrame:
+
+    rows = []
+    spliced_reads = ds.sample_spliced_reads
+    unspliced_reads = ds.sample_unspliced_reads
+    ambiguous_reads = ds.sample_ambiguous_reads
+    total_reads = ds.sample_total_reads
+    spliced_molecules = ds.sample_spliced_molecules
+    unspliced_molecules = ds.sample_unspliced_molecules
+    ambiguous_molecules = ds.sample_ambiguous_molecules
+    total_molecules = ds.sample_total_molecules
+    reads_discarded = ds.sample_reads_discarded
+    reads_excluded = ds.sample_reads_excluded
+
+    for i, s in enumerate(samples):
+        for j, f in enumerate(ds.fracs):
+            rows.append({
+                'sample':s, 'fraction': f,
+                'total_reads':total_reads[i,j],
+                'total_molecules':total_molecules[i,j],
+                'reads_discarded':reads_discarded[i,j],
+                'reads_excluded':reads_excluded[i,j],
+                'spliced_reads':spliced_reads[i,j],
+                'unspliced_reads':unspliced_reads[i,j],
+                'ambiguous_reads':ambiguous_reads[i,j],
+                'spliced_molecules':spliced_molecules[i,j],
+                'unspliced_molecules':unspliced_molecules[i,j],
+                'ambiguous_molecules':ambiguous_molecules[i,j],
+            })
+
+    df = pd.DataFrame(rows)
+    df['saturation'] = 100.0 - 100.0 * df['total_molecules'] / df['total_reads']
     return df
 
 def barcode_df(ds : Downsampler, df : pd.DataFrame, step: int,

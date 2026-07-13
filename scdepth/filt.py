@@ -7,7 +7,7 @@ from scipy.stats import median_abs_deviation
 #from scdepth import libraries
 
 def filter_barcodes(
-        df: pd.DataFrame, library: str, bin_div : int, read_mads: float | None = None,
+        df: pd.DataFrame, library: str, read_mads: float | None = None, bin_div : int = 1,
         min_molecules: int | None = None, dry_run = False, skip_MT = False, 
         add_passed : bool = False, 
 

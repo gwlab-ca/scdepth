@@ -36,36 +36,6 @@ class Args(MutableMapping):
 AddArgsFn = Callable[[argparse.ArgumentParser], None]
 ResolveArgsFn = Callable[[argparse.ArgumentParser], dict]
 
-#def add_mt_gene_args(parser: argparse.ArgumentParser):
-#    grp = parser.add_argument_group('Barcode filtering')
-#    grp.add_argument(
-#            '-m', '--mt-prefix', 
-#            type=str, 
-#            default='',
-#            help='Mitochondria gene name prefix'
-#    )
-#
-#    grp.add_argument(
-#            '-M', '--mt-file', 
-#            type=str, 
-#            default='',
-#            help='Mitochondria gene ID file (one gene per line no header)'
-#    )
-#
-#    grp.add_argument(
-#            '-X', '--mod-file', 
-#            type=str, 
-#            default='',
-#            help='Additional module gene ID file (one gene per line no header)'
-#    )
-
-#def resolve_mt_gene_args(args) -> dict:
-#    return {
-#        'mt_file': args.mt_file,
-#        'mt_prefix': args.mt_prefix,
-#        'mod_file': args.mod_file,
-#    }
-
 def add_barcode_filter_args(parser: argparse.ArgumentParser):
     grp = parser.add_argument_group('Barcode filtering')
 
@@ -89,47 +59,10 @@ def add_barcode_filter_args(parser: argparse.ArgumentParser):
         ),
     )
 
-    #grp.add_argument(
-    #    '--mt-mads',
-    #    type=float,
-    #    default=4.0,
-    #    help=(
-    #        'Upper-tail MAD multiplier for mitochondrial fraction filtering '
-    #        '(median + k*MAD). Set to 0 to disable MAD-based MT filtering.'
-    #        ' Not used for visium HD'
-    #    ),
-    #)
-
-    #grp.add_argument(
-    #    '--mt-cap',
-    #    type=float,
-    #    default=0.30,
-    #    help=(
-    #        'Absolute maximum allowed mitochondrial fraction. '
-    #        'Final MT cutoff is min(mt_cap, median + k*MAD).'
-    #        ' Not used for visium HD'
-    #    ),
-    #)
-
 def resolve_filter_args(args) -> dict:
-    # --- MT parameters ---
-    #if args.mt_file == '' and args.mt_prefix == '':
-    #    mt_mads = None
-    #    mt_cap = None
-    #else:
-    #    mt_mads = args.mt_mads
-    #    mt_cap = args.mt_cap
-
     return {
         'min_molecules': args.min_molecules,
         'molecule_mads': args.molecule_mads,
-        #'mt_mads': mt_mads,
-        #'mt_cap': mt_cap,
-        #'mt_file': args.mt_file,
-        #'mt_prefix': args.mt_prefix,
-        'total_rows':args.vis_rows,
-        'total_cols':args.vis_cols,
-        'bin_div':args.vis_bins,
     }
 
 def add_visium_hd_args(parser: argparse.ArgumentParser):
@@ -260,8 +193,6 @@ def resolve_args(parser, args, use_exc_genes : bool, use_filter : bool,
         )
     params['library'] = summary.library_string
 
-    #if use_MT:
-    #    params.update(resolve_mt_gene_args(args))
     if use_exc_genes:
         params.update(resolve_exc_gene_args(args, libraries.is_probe_based(summary.library_string)))
     if use_filter:

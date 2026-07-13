@@ -205,22 +205,23 @@ def main(parser, args):
             primer_mode=args.primer_mode)
 
     barcodes = np.array([b for b in ds.barcodes['barcode']])
+    samples = np.array([b for b in ds.barcodes['sample']])
     tot = ds.total_csr(0)
     gene_ids = gdf['gene_id'].values
 
-    if args.samples is not None:
-        print('FIX ME AND MAKE THIS AUTOMATIC')
+
+    if (samples != '').sum() > 0:
         sample_cells = []
-        for s in args.samples:
-            idx = np.array([i for i, b in enumerate(barcodes) if b.startswith(f'{sample}_')])
+        for s in sorted(set(samples)):
+            idx = np.where(samples == s)[0]
             if len(idx) == 0:
-                print(f'Warning: no barcodes found for {s}: {len(idx):,} barcodes')
+                print(f'Warning: no barcodes found for {s}')
                 continue
             bcs = barcodes[idx]
+            print(f'Calling emptydrops for {s} with {len(idx):,} barcodes')
 
             total_mols = np.asarray(tot.sum(axis=1)).ravel()
             stot = tot[idx]
-            print(f'Calling emptydrops for {s}')
             cells = run_emptydrops_csr(X=stot, barcodes=bcs, genes=gene_ids, exclude_file=args.exclude_file)
             cells["total_mols"] = total_mols[idx]
             cells["is_cell"] = (
@@ -228,45 +229,59 @@ def main(parser, args):
                 & (cells["FDR"] <= args.FDR)
             )
 
+            cells["molecules"] = total_mols[idx]
+            cells, _ = filt.filter_barcodes(cells, add_passed=True, **args)
+            ed = cells['is_cell'].sum()
+            pp = cells['passed'].sum()
+
+            print(f'  Emptydrops Passed = {ed:,} [{ed/len(cells) * 100.0:.2f}%]')
+            print(f'  Filtering Passed  = {pp:,} [{pp/len(cells) * 100.0:.2f}%]')
+            print(f'  Total Barcodes    = {len(cells):,}')
+
+            cc = cells[cells['is_cell'] & cells['passed']]
+            print(f'  Cells Count Range = {cc["total_mols"].min():,} - {cc["total_mols"].max():,} '
+                  f'Mean = {cc["total_mols"].mean():,.1f}')
             sample_cells.append(cells)
 
         if not sample_cells:
-            raise ValueError("No barcodes matched any values in args.samples")
+            raise ValueError("No barcodes matched any values in ", sorted(set(samples)))
 
         # Produces one DataFrame equivalent to single-sample mode.
         cells = pd.concat(sample_cells, axis=0, ignore_index=False)
     else:
         total_mols = np.asarray(tot.sum(axis=1)).ravel()
 
-        print('Calling emptydrops')
+        print('Calling emptydrops with {len(barcodes):,} barcodes')
         cells = run_emptydrops_csr(
             X=tot,
             barcodes=barcodes,
             genes=gene_ids,
             exclude_file=args.exclude_file,
         )
-
         cells["total_mols"] = total_mols
+        cells["molecules"] = total_mols[idx]
         cells["is_cell"] = (
             cells["FDR"].notna()
             & (cells["FDR"] <= args.FDR)
         )
+        cells["molecules"] = total_mols
+        cells, info = filt.filter_barcodes(cells, add_passed=True, **args)
+        ed = cells['is_cell'].sum()
+        pp = cells['passed'].sum()
+
+        print(f'  Emptydrops Passed = {ed:,} [{ed/len(cells) * 100.0:.2f}%]')
+        print(f'  Filtering Passed  = {pp:,} [{pp/len(cells) * 100.0:.2f}%]')
+        print(f'  Total Barcodes    = {len(cells):,}')
+
+        cc = cells[cells['is_cell'] & cells['passed']]
+        print(f'  Cells Count Range = {cc["total_mols"].min():,} - {cc["total_mols"].max():,}'
+                f'Mean = {cc["total_mols"].mean():,.1f}')
+
 
     cells.to_csv(args.prefix + '_emptydrops_raw.txt.gz', sep='\t')
 
     barcodes = fn.read_barcodes_meta(ds, args.prefix, meta=args.prefix + '_emptydrops_raw.txt.gz')
     df = fn.barcode_df(ds=ds, df=barcodes.copy(), step=0)
-    df, info = filt.filter_barcodes(df, add_passed=True, **args)
 
-    df = df[['barcode','is_cell', 'passed']]
-
-    ed = df['is_cell'].sum()
-    pp = df['passed'].sum()
-    print(f'Emptydrops Passed = {ed:,} [{ed/len(df) * 100.0:.2f}%]')
-    print(f'Filtering Passed  = {pp:,} [{pp/len(df) * 100.0:.2f}%]')
-    print(f'Total Barcodes    = {len(df):,}')
-    #print(info)
-    if args.barcode_prefix is None or args.barcode_prefix == '':
-        df.to_csv(args.prefix + '_emptydrops.txt.gz', sep='\t', index=False)
-    else:
-        df.to_csv(f'{args.prefix}_{args.barcode_prefix}_emptydrops.txt.gz', sep='\t', index=False)
+    df = df[['barcode','is_cell', 'passed', 'sample']]
+    df.to_csv(args.prefix + '_emptydrops.txt.gz', sep='\t', index=False)
