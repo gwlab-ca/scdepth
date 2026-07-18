@@ -3,14 +3,14 @@
 
 #pragma once
 
+#include "downsampler.hpp"
+#include <cassert>
 #include <cstdint>
 #include <vector>
-#include <cassert>
-#include "downsampler.hpp"
 
-namespace scdepth{
+namespace scdepth {
 
-struct VisiumBin{
+struct VisiumBin {
     std::vector<uint32_t> reads;
     std::vector<uint32_t> mols;
     std::vector<uint32_t> genes;
@@ -24,22 +24,20 @@ struct VisiumBin{
     std::vector<uint32_t> bin_rows;
     std::vector<uint32_t> bin_cols;
 
-    size_t                n_rows;
-    size_t                n_cols;
-    size_t                total_rows;
-    size_t                total_cols;
-    size_t                n_bins;
-    size_t                max_hist;
-    bool invalid = false;
+    size_t n_rows;
+    size_t n_cols;
+    size_t total_rows;
+    size_t total_cols;
+    size_t n_bins;
+    size_t max_hist;
+    bool   invalid = false;
 };
 
 /*
 struct RowColHists{
-    void resize(uint32_t barcodes, uint32_t total_rows, uint32_t total_cols, uint32_t max_hist, bool has_mt){
-        this->total_rows = total_rows;
-        this->total_cols = total_cols;
-        this->max_hist = max_hist;
-        this->barcodes = barcodes;
+    void resize(uint32_t barcodes, uint32_t total_rows, uint32_t total_cols,
+uint32_t max_hist, bool has_mt){ this->total_rows = total_rows; this->total_cols
+= total_cols; this->max_hist = max_hist; this->barcodes = barcodes;
 
         const size_t H = max_hist - 1;
         rows.assign(size_t(total_rows) * H, 0);
@@ -120,34 +118,38 @@ struct RowColSums{
 };
 */
 
-VisiumBin aggregate_visium_bins(const Downsampler & ds, uint32_t step, uint32_t row_div, uint32_t col_div);
+VisiumBin aggregate_visium_bins(const Downsampler& ds, uint32_t step,
+                                uint32_t row_div, uint32_t col_div);
 
-struct BinnedMap{
-    void build(const Downsampler & ds, uint32_t bin_div);
-    size_t trows;
-    size_t tcols;
-    size_t N;
+struct BinnedMap {
+    void                build(const Downsampler& ds, uint32_t bin_div);
+    size_t              trows;
+    size_t              tcols;
+    size_t              N;
     std::vector<size_t> bc2bin;
     std::vector<size_t> bin_ptr;
     std::vector<size_t> bin_barcodes;
 
     uint32_t bin_div;
-
 };
 
-bool make_filt_gbin_mat(const BinnedMap & bm, const GeneCountMatrix & gmat, GeneCountMatrix & go, 
-        const std::vector<uint32_t> & idx);
+bool make_filt_gbin_mat(const BinnedMap& bm, const GeneCountMatrix& gmat,
+                        GeneCountMatrix& go, const std::vector<uint32_t>& idx);
 
-bool make_filt_cbin_mat(const BinnedMap & bm, const SparseMatrix & gmat, SparseMatrix & go, 
-        const std::vector<uint32_t> & idx);
+bool make_filt_cbin_mat(const BinnedMap& bm, const SparseMatrix& gmat,
+                        SparseMatrix& go, const std::vector<uint32_t>& idx);
 
-void bin_gene_counts(const Downsampler & ds, uint32_t step, uint32_t bin_div, SparseMatrix & out);
+void bin_gene_counts(const Downsampler& ds, uint32_t step, uint32_t bin_div,
+                     SparseMatrix& out);
 
+// void aggregate_visium_hists(const Downsampler & ds, RowColHists & out,
+// uint32_t step, unsigned int min_molecules,
+//                             bool in_tissue); /*, bool permute, double frac,
+//                             uint32_t seed);*/
 
-//void aggregate_visium_hists(const Downsampler & ds, RowColHists & out, uint32_t step, unsigned int min_molecules, 
-//                            bool in_tissue); /*, bool permute, double frac, uint32_t seed);*/
+// void aggregate_visium(const Downsampler & ds, RowColSums & out, uint32_t
+// step, unsigned int min_molecules,
+//                             bool in_tissue, bool permute, double frac,
+//                             uint32_t seed);
 
-//void aggregate_visium(const Downsampler & ds, RowColSums & out, uint32_t step, unsigned int min_molecules, 
-//                            bool in_tissue, bool permute, double frac, uint32_t seed);
-
-};
+}; // namespace scdepth

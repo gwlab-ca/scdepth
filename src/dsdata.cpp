@@ -5,77 +5,92 @@
 
 using namespace scdepth;
 
-
-void SparseMatrix::merge(const SparseMatrix & rhs){
-    if(rhs.empty()) return;
-    if(empty()){
-        indptr = rhs.indptr;
+void SparseMatrix::merge(const SparseMatrix& rhs) {
+    if(rhs.empty())
+        return;
+    if(empty()) {
+        indptr  = rhs.indptr;
         indices = rhs.indices;
-        data = rhs.data;
-        //std::cout << "Assign sparse indptr = " << indptr.size() << " data = " << data.size() << " indices = " << indices.size() << " back = " << indptr.back() << "\n";
+        data    = rhs.data;
+        // std::cout << "Assign sparse indptr = " << indptr.size() << " data = "
+        // << data.size() << " indices = " << indices.size() << " back = " <<
+        // indptr.back() << "\n";
         return;
     }
 
     /*
-    std::cout << "Merge sparse indptr = " << indptr.size() << " data = " << data.size() << " indices = " << indices.size() << " back = " << indptr.back() << "\n";
-    std::cout << "         rhs indptr = " << rhs.indptr.size() << " data = " << rhs.data.size() << " indices = " << rhs.indices.size() << " back = " << rhs.indptr.back() << "\n";
+    std::cout << "Merge sparse indptr = " << indptr.size() << " data = " <<
+    data.size() << " indices = " << indices.size() << " back = " <<
+    indptr.back() << "\n"; std::cout << "         rhs indptr = " <<
+    rhs.indptr.size() << " data = " << rhs.data.size() << " indices = " <<
+    rhs.indices.size() << " back = " << rhs.indptr.back() << "\n";
     */
     assert(indptr.back() == data.size());
     assert(rhs.indptr.back() == rhs.data.size());
     indices.reserve(indices.size() + rhs.indices.size());
     data.reserve(data.size() + rhs.data.size());
-    //both matrices have + 1 elements
+    // both matrices have + 1 elements
     indptr.reserve(indptr.size() + rhs.indptr.size() - 1);
 
-    size_t osize = indptr.size();
+    size_t   osize = indptr.size();
     uint32_t delta = indptr.back();
     indices.insert(indices.end(), rhs.indices.begin(), rhs.indices.end());
     data.insert(data.end(), rhs.data.begin(), rhs.data.end());
-    //skip the first one becuase indptr is always N+1 elements
-    indptr.insert(indptr.end(), std::next(rhs.indptr.begin()), rhs.indptr.end());
-    //move one after the first element from rhs
-    //      |last from this| +1 from this/rhs.indptr[0] | rhs indptr[1] |
-    //index | osize  - 2   |            osize - 1       | osize         |
-    //must add delta to indptr[1:] 
-    for(auto it = std::next(indptr.begin(), osize); it != indptr.end(); it++){
+    // skip the first one becuase indptr is always N+1 elements
+    indptr.insert(indptr.end(), std::next(rhs.indptr.begin()),
+                  rhs.indptr.end());
+    // move one after the first element from rhs
+    //       |last from this| +1 from this/rhs.indptr[0] | rhs indptr[1] |
+    // index | osize  - 2   |            osize - 1       | osize         |
+    // must add delta to indptr[1:]
+    for(auto it = std::next(indptr.begin(), osize); it != indptr.end(); it++) {
         (*it) += delta;
     }
-    //std::cout << "         after indptr = " << indptr.size() << " data = " << data.size() << " indices = " << indices.size() << " back = " << indptr.back() << "\n";
+    // std::cout << "         after indptr = " << indptr.size() << " data = " <<
+    // data.size() << " indices = " << indices.size() << " back = " <<
+    // indptr.back() << "\n";
 }
 
-void GeneCountMatrix::merge(const GeneCountMatrix & rhs){
-    if(rhs.empty()) return;
-    if(empty()){
-        indptr = rhs.indptr;
+void GeneCountMatrix::merge(const GeneCountMatrix& rhs) {
+    if(rhs.empty())
+        return;
+    if(empty()) {
+        indptr  = rhs.indptr;
         indices = rhs.indices;
-        //std::cout << "Assign sparse indptr = " << indptr.size() << " indices = " << indices.size() << " back = " << indptr.back() << "\n";
+        // std::cout << "Assign sparse indptr = " << indptr.size() << " indices
+        // = " << indices.size() << " back = " << indptr.back() << "\n";
         return;
     }
 
-    //std::cout << "Merge sparse indptr = " << indptr.size() << " indices = " << indices.size() << " back = " << indptr.back() << "\n";
-    //std::cout << "         rhs indptr = " << rhs.indptr.size() << " indices = " << rhs.indices.size() << " back = " << rhs.indptr.back() << "\n";
+    // std::cout << "Merge sparse indptr = " << indptr.size() << " indices = "
+    // << indices.size() << " back = " << indptr.back() << "\n"; std::cout << "
+    // rhs indptr = " << rhs.indptr.size() << " indices = " <<
+    // rhs.indices.size() << " back = " << rhs.indptr.back() << "\n";
     indices.reserve(indices.size() + rhs.indices.size());
-    //both matrices have + 1 elements
+    // both matrices have + 1 elements
     indptr.reserve(indptr.size() + rhs.indptr.size() - 1);
 
-    size_t osize = indptr.size();
+    size_t   osize = indptr.size();
     uint32_t delta = indptr.back();
     indices.insert(indices.end(), rhs.indices.begin(), rhs.indices.end());
-    //skip the first one becuase indptr is always N+1 elements
-    indptr.insert(indptr.end(), std::next(rhs.indptr.begin()), rhs.indptr.end());
-    //move one after the first element from rhs
-    //      |last from this| +1 from this/rhs.indptr[0] | rhs indptr[1] |
-    //index | osize  - 2   |            osize - 1       | osize         |
-    //must add delta to indptr[1:] 
-    for(auto it = std::next(indptr.begin(), osize); it != indptr.end(); it++){
+    // skip the first one becuase indptr is always N+1 elements
+    indptr.insert(indptr.end(), std::next(rhs.indptr.begin()),
+                  rhs.indptr.end());
+    // move one after the first element from rhs
+    //       |last from this| +1 from this/rhs.indptr[0] | rhs indptr[1] |
+    // index | osize  - 2   |            osize - 1       | osize         |
+    // must add delta to indptr[1:]
+    for(auto it = std::next(indptr.begin(), osize); it != indptr.end(); it++) {
         (*it) += delta;
     }
-    //std::cout << "         after indptr = " << indptr.size() << " indices = " << indices.size() << " back = " << indptr.back() << "\n";
+    // std::cout << "         after indptr = " << indptr.size() << " indices = "
+    // << indices.size() << " back = " << indptr.back() << "\n";
 }
 
-void DownsampleResultsType::reset(const std::vector<double> & fracs, size_t barcodes, size_t max_hist, 
-        /*size_t genes,*/ bool alloc_barcodes, bool has_mt, bool has_mod, size_t samples)
-{
+void DownsampleResultsType::reset(const std::vector<double>& fracs,
+                                  size_t barcodes, size_t max_hist,
+                                  /*size_t genes,*/ bool alloc_barcodes,
+                                  bool has_mt, bool has_mod, size_t samples) {
     mhist.assign(fracs.size() * max_hist, 0);
     sample_mhist.assign(fracs.size() * max_hist * samples, 0);
     reads.assign(fracs.size(), 0);
@@ -83,29 +98,32 @@ void DownsampleResultsType::reset(const std::vector<double> & fracs, size_t barc
     sample_molecules.assign(fracs.size() * samples, 0);
     sample_reads.assign(fracs.size() * samples, 0);
 
-    if(alloc_barcodes){
+    if(alloc_barcodes) {
         size_t N = barcodes * fracs.size();
         bc_reads.assign(N, 0);
         bc_mols.assign(N, 0);
         bc_genes.assign(N, 0);
 
-        if(has_mt)  bc_mt_mols.assign(N, 0);
-        else        bc_mt_mols.resize(0);
-        if(has_mod) bc_mod_mols.assign(N, 0);
-        else        bc_mod_mols.resize(0);
-    }else{
+        if(has_mt)
+            bc_mt_mols.assign(N, 0);
+        else
+            bc_mt_mols.resize(0);
+        if(has_mod)
+            bc_mod_mols.assign(N, 0);
+        else
+            bc_mod_mols.resize(0);
+    } else {
         bc_reads.resize(0);
         bc_mols.resize(0);
         bc_genes.resize(0);
         bc_mt_mols.resize(0);
         bc_mod_mols.resize(0);
     }
-
 }
 
-void DownsampleResultsType::merge(const DownsampleResultsType & rhs){
+void DownsampleResultsType::merge(const DownsampleResultsType& rhs) {
     sum_vectors(mhist, rhs.mhist, false);
-    if(sample_mhist.size() > 0){
+    if(sample_mhist.size() > 0) {
         sum_vectors(sample_mhist, rhs.sample_mhist, false);
         sum_vectors(sample_reads, rhs.sample_reads, false);
         sum_vectors(sample_molecules, rhs.sample_molecules, false);
@@ -114,16 +132,18 @@ void DownsampleResultsType::merge(const DownsampleResultsType & rhs){
     sum_vectors(molecules, rhs.molecules, false);
 }
 
+void DownsampleResultsLocal::reset(const std::vector<double>& fracs,
+                                   size_t barcodes, size_t genes,
+                                   size_t max_hist, bool build_mats,
+                                   bool has_visium, bool calc_sau,
+                                   bool aggregate_only, size_t samples) {
 
-void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t barcodes, size_t genes, size_t max_hist, 
-        bool build_mats, bool has_visium, bool calc_sau, bool aggregate_only, size_t samples){
-
-    this->fracs = fracs;
-    this->steps = fracs.size();
+    this->fracs    = fracs;
+    this->steps    = fracs.size();
     this->barcodes = barcodes;
     this->max_hist = max_hist;
-    this->genes = genes;
-    this->samples = samples;
+    this->genes    = genes;
+    this->samples  = samples;
 
     reads_discarded.resize(fracs.size());
     reads_excluded.resize(fracs.size());
@@ -150,7 +170,6 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     total_molecules.resize(fracs.size());
     total_mhist.resize(fracs.size() * max_hist);
 
-
     sample_reads_discarded.resize(samples * fracs.size());
     sample_reads_excluded.resize(samples * fracs.size());
     sample_mols_discarded.resize(samples * fracs.size());
@@ -163,25 +182,24 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     sample_ambiguous_molecules.resize(samples * fracs.size());
     sample_ambiguous_reads.resize(samples * fracs.size());
 
-
-    this->calc_sau = calc_sau;
+    this->calc_sau   = calc_sau;
     this->build_mats = build_mats;
     this->has_visium = has_visium;
 
-    if(!aggregate_only){
+    if(!aggregate_only) {
         gcounts.assign(fracs.size(), GeneCountMatrix());
-    }else{
+    } else {
         gcounts.resize(0);
     }
 
-    if(build_mats){
+    if(build_mats) {
         total_mat.assign(fracs.size(), SparseMatrix());
-        if(calc_sau){
+        if(calc_sau) {
             spliced_mat.assign(fracs.size(), SparseMatrix());
             ambiguous_mat.assign(fracs.size(), SparseMatrix());
             unspliced_mat.assign(fracs.size(), SparseMatrix());
         }
-    }else{
+    } else {
         total_mat.resize(0);
         spliced_mat.resize(0);
         ambiguous_mat.resize(0);
@@ -189,15 +207,17 @@ void DownsampleResultsLocal::reset(const std::vector<double> & fracs, size_t bar
     }
 }
 
-void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes, size_t genes, size_t max_hist, 
-        bool build_mats, bool calc_sau, bool alloc_barcodes, bool has_visium, size_t samples){
+void DownsampleResults::reset(const std::vector<double>& fracs, size_t barcodes,
+                              size_t genes, size_t max_hist, bool build_mats,
+                              bool calc_sau, bool alloc_barcodes,
+                              bool has_visium, size_t samples) {
 
-    this->fracs = fracs;
-    this->steps = fracs.size();
+    this->fracs    = fracs;
+    this->steps    = fracs.size();
     this->barcodes = barcodes;
     this->max_hist = max_hist;
-    this->genes = genes;
-    this->samples = samples;
+    this->genes    = genes;
+    this->samples  = samples;
 
     reads_discarded.resize(fracs.size());
     reads_excluded.resize(fracs.size());
@@ -207,46 +227,50 @@ void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes
     sample_reads_excluded.resize(fracs.size() * samples);
     sample_mols_discarded.resize(fracs.size() * samples);
 
-    //total_singles.resize(fracs.size());
-    //ed0_cross.resize(fracs.size());
-    //ed1_cross.resize(fracs.size());
-    //ed1_same.resize(fracs.size());
+    // total_singles.resize(fracs.size());
+    // ed0_cross.resize(fracs.size());
+    // ed1_cross.resize(fracs.size());
+    // ed1_same.resize(fracs.size());
 
-    if(alloc_barcodes){
+    if(alloc_barcodes) {
         size_t N = barcodes * fracs.size();
         bc_dis_reads.assign(N, 0);
         bc_dis_mols.assign(N, 0);
         bc_exc_reads.assign(N, 0);
-        //cell_mhist.assign(N * max_hist, 0);
-    }else{
+        // cell_mhist.assign(N * max_hist, 0);
+    } else {
         bc_exc_reads.resize(0);
         bc_dis_reads.resize(0);
         bc_dis_mols.resize(0);
-        //cell_mhist.resize(0);
+        // cell_mhist.resize(0);
     }
 
-    spliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc, samples);
-    ambiguous.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc, samples);
-    unspliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau), has_mt, has_exc, samples);
+    spliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau),
+                  has_mt, has_exc, samples);
+    ambiguous.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau),
+                    has_mt, has_exc, samples);
+    unspliced.reset(fracs, barcodes, max_hist, (alloc_barcodes && calc_sau),
+                    has_mt, has_exc, samples);
 
-    total.reset(fracs, barcodes, max_hist, alloc_barcodes, has_mt, has_exc, samples);
-    this->calc_sau = calc_sau;
+    total.reset(fracs, barcodes, max_hist, alloc_barcodes, has_mt, has_exc,
+                samples);
+    this->calc_sau   = calc_sau;
     this->build_mats = build_mats;
     this->has_visium = has_visium;
 
-    if(!aggregate_only){
+    if(!aggregate_only) {
         gcounts.assign(fracs.size(), GeneCountMatrix());
-    }else{
+    } else {
         gcounts.resize(0);
     }
-    if(build_mats){
+    if(build_mats) {
         total_mat.assign(fracs.size(), SparseMatrix());
-        if(calc_sau){
+        if(calc_sau) {
             spliced_mat.assign(fracs.size(), SparseMatrix());
             ambiguous_mat.assign(fracs.size(), SparseMatrix());
             unspliced_mat.assign(fracs.size(), SparseMatrix());
         }
-    }else{
+    } else {
         total_mat.resize(0);
         spliced_mat.resize(0);
         ambiguous_mat.resize(0);
@@ -254,7 +278,7 @@ void DownsampleResults::reset(const std::vector<double> & fracs, size_t barcodes
     }
 }
 
-void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
+void DownsampleResults::merge(const DownsampleResultsLocal& rhs) {
     assert(fracs.size() == rhs.fracs.size());
 
     sum_vectors(spliced.mhist, rhs.spliced_mhist, false);
@@ -277,7 +301,7 @@ void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
     sum_vectors(reads_excluded, rhs.reads_excluded, false);
     sum_vectors(mols_discarded, rhs.mols_discarded, false);
 
-    if(samples > 0){
+    if(samples > 0) {
         sum_vectors(spliced.sample_mhist, rhs.spliced_sample_mhist, false);
         sum_vectors(unspliced.sample_mhist, rhs.unspliced_sample_mhist, false);
         sum_vectors(total.sample_mhist, rhs.total_sample_mhist, false);
@@ -286,41 +310,43 @@ void DownsampleResults::merge(const DownsampleResultsLocal & rhs){
         sum_vectors(sample_reads_excluded, rhs.sample_reads_excluded, false);
         sum_vectors(sample_mols_discarded, rhs.sample_mols_discarded, false);
         sum_vectors(unspliced.sample_reads, rhs.sample_unspliced_reads, false);
-        sum_vectors(unspliced.sample_molecules, rhs.sample_unspliced_molecules, false);
+        sum_vectors(unspliced.sample_molecules, rhs.sample_unspliced_molecules,
+                    false);
         sum_vectors(spliced.sample_reads, rhs.sample_spliced_reads, false);
-        sum_vectors(spliced.sample_molecules, rhs.sample_spliced_molecules, false);
+        sum_vectors(spliced.sample_molecules, rhs.sample_spliced_molecules,
+                    false);
         sum_vectors(ambiguous.sample_reads, rhs.sample_ambiguous_reads, false);
-        sum_vectors(ambiguous.sample_molecules, rhs.sample_ambiguous_molecules, false);
+        sum_vectors(ambiguous.sample_molecules, rhs.sample_ambiguous_molecules,
+                    false);
         sum_vectors(total.sample_reads, rhs.sample_total_reads, false);
         sum_vectors(total.sample_molecules, rhs.sample_total_molecules, false);
     }
 
-    if(build_mats){
-        if(calc_sau){
-            //matrices have been built
+    if(build_mats) {
+        if(calc_sau) {
+            // matrices have been built
             assert(spliced_mat.size() == rhs.spliced_mat.size());
-            for(size_t i = 0; i < spliced_mat.size(); i++){
+            for(size_t i = 0; i < spliced_mat.size(); i++) {
                 spliced_mat[i].merge(rhs.spliced_mat[i]);
             }
             assert(ambiguous_mat.size() == rhs.ambiguous_mat.size());
-            for(size_t i = 0; i < ambiguous_mat.size(); i++){
+            for(size_t i = 0; i < ambiguous_mat.size(); i++) {
                 ambiguous_mat[i].merge(rhs.ambiguous_mat[i]);
             }
             assert(unspliced_mat.size() == rhs.unspliced_mat.size());
-            for(size_t i = 0; i < unspliced_mat.size(); i++){
+            for(size_t i = 0; i < unspliced_mat.size(); i++) {
                 unspliced_mat[i].merge(rhs.unspliced_mat[i]);
             }
         }
         assert(total_mat.size() == rhs.total_mat.size());
-        for(size_t i = 0; i < total_mat.size(); i++){
+        for(size_t i = 0; i < total_mat.size(); i++) {
             total_mat[i].merge(rhs.total_mat[i]);
         }
     }
-    if(!aggregate_only){
+    if(!aggregate_only) {
         assert(gcounts.size() == rhs.gcounts.size());
-        for(size_t i = 0; i < gcounts.size(); i++){
+        for(size_t i = 0; i < gcounts.size(); i++) {
             gcounts[i].merge(rhs.gcounts[i]);
         }
     }
 }
-
